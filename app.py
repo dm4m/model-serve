@@ -7,8 +7,8 @@ from pymilvus import Collection
 
 app = Flask(__name__)
 
-model = RoFormerModel.from_pretrained("junnyu/roformer_chinese_sim_char_ft_base")
-tokenizer = RoFormerTokenizer.from_pretrained("junnyu/roformer_chinese_sim_char_ft_base")
+model = RoFormerModel.from_pretrained("./roformer_chinese_sim_char_ft_base")
+tokenizer = RoFormerTokenizer.from_pretrained("./roformer_chinese_sim_char_ft_base")
 use_gpu = True
 
 def load_model():
@@ -16,8 +16,8 @@ def load_model():
     """
     global model
     global tokenizer
-    model = RoFormerModel.from_pretrained("junnyu/roformer_chinese_sim_char_ft_base")
-    tokenizer = RoFormerTokenizer.from_pretrained("junnyu/roformer_chinese_sim_char_ft_base")
+    model = RoFormerModel.from_pretrained("./roformer_chinese_sim_char_ft_base")
+    tokenizer = RoFormerTokenizer.from_pretrained("./roformer_chinese_sim_char_ft_base")
 
     if use_gpu:
         model.cuda()
@@ -38,16 +38,19 @@ def predict():
         collection = Collection("patent")  # Get an existing collection.
         collection.load()
         pt_inputs = tokenizer(query, max_length=64, padding=True, return_tensors="pt")
+        # pt_inputs = tokenizer(query, max_length=505, return_tensors="pt")
         pt_outputs = model(**pt_inputs)
         query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
+        print("query vector:" + str(query_embeddings) )
         search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
         vec_results = collection.search(query_embeddings, "title", param=search_params, limit=100, expr=None)
         idlist = list(vec_results[0].ids)
+        print(idlist)
         return jsonify(idlist)
     elif field == "signory_item":
         collection = Collection("signory")  # Get an existing collection.
         collection.load()
-        pt_inputs = tokenizer(query, max_length=64, padding=True, return_tensors="pt")
+        pt_inputs = tokenizer(query, max_length=505, return_tensors="pt")
         pt_outputs = model(**pt_inputs)
         query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
         search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
@@ -57,6 +60,18 @@ def predict():
         for result in vec_results[0]:
             if(result.entity.patent_id not in idlist):
                 idlist.append(result.entity.patent_id)
+        print(idlist)
+        return jsonify(idlist)
+    elif field == "abstract":
+        collection = Collection("abstract")  # Get an existing collection.
+        collection.load()
+        pt_inputs = tokenizer(query, max_length=505, return_tensors="pt")
+        pt_outputs = model(**pt_inputs)
+        query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
+        search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
+        vec_results = collection.search(query_embeddings, "abstract", param=search_params, limit=100, expr=None)
+        idlist = list(vec_results[0].ids)
+        print(idlist)
         return jsonify(idlist)
     elif field == "vector":
         pt_inputs = tokenizer(query, max_length=64, padding=True, return_tensors="pt")
