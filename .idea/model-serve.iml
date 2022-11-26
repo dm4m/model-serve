@@ -4,7 +4,9 @@
     <option name="enabled" value="true" />
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/models/roformer_chinese_sim_char_ft_base" />
+    </content>
     <orderEntry type="jdk" jdkName="Remote Python 3.8.0 (sftp://bwj@10.1.0.177:22/data/bwj/develop/enviroments/anaconda3/envs/patent2vec/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
