@@ -1,14 +1,16 @@
 import re
 import pdfplumber
 
-def signory_extract():
+def novelty_analysis(pdf_file):
+    signory_text = signory_extract(pdf_file)
+    signory_items = signory_split(signory_text)
+
+def signory_extract(pdf_file):
     signory = ""
-    with pdfplumber.open("sample.pdf") as pdf:
-        for page in pdf.pages:
-            cur_text = page.extract_text().replace("　", "").replace(" ", "")
-            if "权利要求书" in cur_text and "说明书" not in cur_text:
-                signory += cur_text
-    print(signory)
+    for page in pdf_file.pages:
+        cur_text = page.extract_text().replace("　", "").replace(" ", "")
+        if "权利要求书" in cur_text and "说明书" not in cur_text:
+            signory += cur_text
     return signory
 
 def signory_split(signory):
@@ -36,6 +38,10 @@ def signory_split(signory):
         else:
             signory_list = [signory]
     return signory_list
+
+def signory_analysis(signory_items):
+    # todo
+    pass
 
 if __name__ == '__main__':
     ll = signory_split(signory_extract())
