@@ -1,5 +1,7 @@
 import re
-import pdfplumber
+from repository.milvus_source import get_relevant_id_list
+from repository.mysql_source import get_sig_text_by_id
+
 
 def novelty_analysis(pdf_file):
     signory_text = signory_extract(pdf_file)
@@ -40,9 +42,14 @@ def signory_split(signory):
     return signory_list
 
 def signory_analysis(signory_items):
-    # todo
-    pass
+    analysis_res = []
+    for signory_item in signory_items:
+        analysis_res.append(signory_item_analysis(signory_item))
+    return analysis_res
 
-if __name__ == '__main__':
-    ll = signory_split(signory_extract())
-    print(ll)
+def signory_item_analysis(signory_item):
+    # 1.recall relevant signory items 2. extract and compare
+    relevant_signory_ids = get_relevant_id_list("signory", "signory", signory_item)
+    relevant_signory_text = get_sig_text_by_id(relevant_signory_ids)
+    # do the analysis
+    pass
