@@ -1,11 +1,14 @@
 import re
+from novelty.compare import novelty_compare
 from repository.milvus_source import get_relevant_id_list
-from repository.mysql_source import get_sig_text_by_id
+from repository.mysql_source import get_sig_by_id
 
 
 def novelty_analysis(pdf_file):
     signory_text = signory_extract(pdf_file)
     signory_items = signory_split(signory_text)
+    analysis_res = signory_analysis(signory_items)
+    return analysis_res
 
 def signory_extract(pdf_file):
     signory = ""
@@ -49,7 +52,9 @@ def signory_analysis(signory_items):
 
 def signory_item_analysis(signory_item):
     # 1.recall relevant signory items 2. extract and compare
-    relevant_signory_ids = get_relevant_id_list("signory", "signory", signory_item)
-    relevant_signory_text = get_sig_text_by_id(relevant_signory_ids)
-    # do the analysis
-    pass
+    relevant_signory_ids = get_relevant_id_list("signory", "signory", signory_item, limit=10)
+    relevant_signorys = get_sig_by_id(relevant_signory_ids)
+    ans_result = []
+    for sig in relevant_signorys:
+        ans_result.append(novelty_compare(signory_item, sig["signory_seg"]))
+    return  ans_result

@@ -10,7 +10,7 @@ def patent_neural_search(field, query):
         return jsonify(id_list)
     elif field == 'signoryItem':
         sig_id_list = []
-        vec_results = get_relevant_vec_results("signory", "signory", query, ["signory_id", "patent_id"])
+        vec_results = get_relevant_vec_results("signory", "signory", query, output_list = ["signory_id", "patent_id"])
         for result in vec_results[0]:
             if (result.entity.patent_id not in sig_id_list):
                 sig_id_list.append(result.entity.patent_id)
