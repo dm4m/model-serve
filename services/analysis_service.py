@@ -4,11 +4,10 @@ from repository.milvus_source import get_relevant_id_list
 from repository.mysql_source import get_sig_by_id
 
 
-def novelty_analysis(pdf_file):
+def get_signory_list_by_pdf_file(pdf_file):
     signory_text = signory_extract(pdf_file)
     signory_items = signory_split(signory_text)
-    analysis_res = signory_analysis(signory_items)
-    return analysis_res
+    return signory_items
 
 def signory_extract(pdf_file):
     signory = ""
@@ -56,5 +55,5 @@ def signory_item_analysis(signory_item):
     relevant_signorys = get_sig_by_id(relevant_signory_ids)
     ans_result = []
     for sig in relevant_signorys:
-        ans_result.append(novelty_compare(signory_item, sig["signory_seg"]))
-    return  ans_result
+        ans_result.append([sig, novelty_compare(signory_item, sig["signory_seg"])])
+    return ans_result
