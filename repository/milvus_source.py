@@ -15,7 +15,7 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
     connections.disconnect("default")
     return vec_results
 
-def get_relevant_id_list(collection_name, field, query, limit):
+def get_relevant_id_list(collection_name, field, query, limit = 100):
     vec_results = get_relevant_vec_results(collection_name, field, query, limit=limit)
     id_list = list(vec_results[0].ids)
     return id_list

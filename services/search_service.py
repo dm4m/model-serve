@@ -15,3 +15,6 @@ def patent_neural_search(field, query):
             if (result.entity.patent_id not in sig_id_list):
                 sig_id_list.append(result.entity.patent_id)
         return jsonify(sig_id_list)
+
+def search_by_patent(signory_list):
+    return patent_neural_search('signoryItem', signory_list[0])
