@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, Blueprint
 from services.search_service import *
-from services.analysis_service import *
+from services.novelty_service import *
 import pdfplumber
 import io
 

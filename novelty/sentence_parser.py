@@ -1,42 +1,49 @@
-#!/usr/bin/env python3
-# coding: utf-8
-# File: sentence_parser.py
-# Author: lhy<lhy_in_blcu@126.com,https://huangyong.github.io>
-# Date: 18-3-10
-
 import os
 from pyltp import Segmentor, Postagger, Parser, NamedEntityRecognizer, SementicRoleLabeller
-import jieba
+
 
 class LtpParser:
     def __init__(self):
         LTP_DIR = os.path.dirname(__file__) + "/ltp_data_v3.4.0"
-        user_dict = os.path.dirname(__file__) + 'data/dict.txt'
-        self.segmentor = Segmentor()
-        # self.segmentor.load(os.path.join(LTP_DIR, "cws.model"))
-        self.segmentor.load_with_lexicon(os.path.join(LTP_DIR, "cws.model"), user_dict)
+        user_dict = os.path.dirname(__file__) + '/data/dict.txt'
 
-        self.postagger = Postagger()
-        self.postagger.load(os.path.join(LTP_DIR, "pos.model"))
+        # # pyltp 0.2.1
+        # self.segmentor = Segmentor()
+        # self.segmentor.load_with_lexicon(os.path.join(LTP_DIR, "cws.model"), user_dict)
+
+        # self.postagger = Postagger()
         # self.postagger.load_with_lexicon(os.path.join(LTP_DIR, "pos.model"), user_dict)
 
-        self.parser = Parser()
-        self.parser.load(os.path.join(LTP_DIR, "parser.model"))
+        # self.parser = Parser()
+        # self.parser.load(os.path.join(LTP_DIR, "parser.model"))
 
-        self.recognizer = NamedEntityRecognizer()
-        self.recognizer.load(os.path.join(LTP_DIR, "ner.model"))
+        # self.recognizer = NamedEntityRecognizer()
+        # self.recognizer.load(os.path.join(LTP_DIR, "ner.model"))
 
-        self.labeller = SementicRoleLabeller()
-        self.labeller.load(os.path.join(LTP_DIR, 'pisrl.model'))
+        # self.labeller = SementicRoleLabeller()
+        # self.labeller.load(os.path.join(LTP_DIR, 'pisrl.model'))
+
+        # pyltp 0.4.0
+        self.segmentor = Segmentor(os.path.join(LTP_DIR, "cws.model"), user_dict)
+        self.postagger = Postagger(os.path.join(LTP_DIR, "pos.model"))
+        self.parser = Parser(os.path.join(LTP_DIR, "parser.model"))
+        self.recognizer = NamedEntityRecognizer(os.path.join(LTP_DIR, "ner.model"))
+        self.labeller = SementicRoleLabeller(os.path.join(LTP_DIR, 'pisrl.model'))
 
     '''语义角色标注'''
     def format_labelrole(self, words, postags, arcs):
         roles = self.labeller.label(words, postags, arcs)
         # print("len(roles) = {0}----roles = {1}".format(len(roles), roles))
         roles_dict = {}
-        for role in roles:
+        for index,arguments in roles:
             # print("谓语所在索引：role.index = {0}".format(role.index))
-            roles_dict[role.index] = {arg.name:[arg.name,arg.range.start, arg.range.end] for arg in role.arguments}
+            # for arg in arguments:
+            #     print(index,arg[0],arg[1][0],arg[1][1]) 
+            # role[0]:role.index
+            # arg[0]:arg.name
+            # arg[1][0]:arg.range.start
+            # arg[1][1]:arg.range.end
+            roles_dict[index] = {arg[0]:[arg[0],arg[1][0], arg[1][1]] for arg in arguments}
         # print("语义角色标注---->roles_dict = {0}".format(roles_dict))
         return roles_dict
 
@@ -47,11 +54,14 @@ class LtpParser:
         format_parse_list = []
         # print("分词列表：words = {}".format(words))
         # print("词性分析：postags = {}".format(postags))
-        rely_ids = [arc.head - 1 for arc in arcs]  # 提取该句话的每一个词的依存父节点id【0为ROOT，词语从1开始编号】: [2, 0, 2, 5, 8, 8, 6, 3] - 1 =  [1, -1, 1, 4, 7, 7, 5, 2]【此时 -1 表示ROOT】
+        # for arc in arcs:
+            # print(arc[0],arc[1])
+            # print(arc.head,arc.relation)
+        rely_ids = [arc[0] - 1 for arc in arcs]  # 提取该句话的每一个词的依存父节点id【0为ROOT，词语从1开始编号】: [2, 0, 2, 5, 8, 8, 6, 3] - 1 =  [1, -1, 1, 4, 7, 7, 5, 2]【此时 -1 表示ROOT】
         # print("各个词语所依赖的父节点：rely_ids = {0}".format(rely_ids))
         heads = ['Root' if rely_id == -1 else words[rely_id] for rely_id in rely_ids]  # 匹配依存父节点词语
         # print("各个词语所依赖的父节点词语 = {0}".format(heads))
-        relations = [arc.relation for arc in arcs]  # 提取依存关系
+        relations = [arc[1] for arc in arcs]  # 提取依存关系
         # print("各个词语与所依赖的父节点的依赖关系 = {0}".format(relations))
 
         for word_index in range(len(words)):
@@ -150,18 +160,20 @@ class LtpParser:
             if words[i] == '所述' and postags[i+1] == 'v':
                 postags[i+1] = 'n'
         return postags
-    # def words_postags_reprocessing(self, words, postags):
-    #     for i in range(len(words)-1):
-    #         if words[i] == '所述' and postags[i+1] == 'v':
-    #             postags[i+1] = 'n'
-    #     index = words.index('所述')
-    #     print("index:", index)
-    #     return words, postags
+
 
     # 三元组的e2进行处理
-    def words_postags(self, sentence):
-        words = list(self.segmentor.segment(sentence))
-        postags = list(self.postagger.postag(words))
+    def words_postags(self, HanLP, sentence):#此处先用hanlp分，如果分不开(分词数为1)再用ltp分
+
+        # words = list(self.segmentor.segment(sentence))
+        # postags = list(self.postagger.postag(words))
+        # print("words,postags:",words,postags)
+
+        doc = HanLP(sentence, tasks=['tok/fine','pos/pku'])
+        words = doc['tok/fine']
+        postags = doc['pos/pku']
+        # print("words,postags:",words,postags)
+
         words_1 = []
         postags_1 = []
         i = 0
@@ -176,6 +188,7 @@ class LtpParser:
                 i += 1
         words_1 = words_1 + words[i:] if i<=len(words)-1 else words_1
         postags_1 = postags_1 + postags[i:] if i<=len(words)-1 else postags_1
+        # print("words_1,postags_1:",words_1,postags_1)
 
         words_2 = []
         postags_2 = []
@@ -183,6 +196,7 @@ class LtpParser:
             if postags_1[i] != 'c': # 删掉连词
                 words_2.append(words_1[i])
                 postags_2.append(postags_1[i])
+        # print("words_2,postags_2:",words_2,postags_2)
 
         # -10.0 % : m wp
         words_3 = []
@@ -198,6 +212,7 @@ class LtpParser:
             else:
                 words_3.append(words_2[i])
                 postags_3.append(postags_2[i])
+        # print("words_3,postags_3:",words_3,postags_3)
         
         words_4 = []
         postags_4 = []
@@ -213,39 +228,29 @@ class LtpParser:
                 i += 1
         words_4 = words_4 + words_3[i:] if i<=len(words_3)-1 else words_4
         postags_4 = postags_4 + postags_3[i:] if i<=len(words_3)-1 else postags_4
+        # print("words_4,postags_4:",words_4,postags_4)
 
         return words_4, postags_4
 
+    
+
     '''parser主函数'''
-    def parser_main(self, sentence):
-        words = list(self.segmentor.segment(sentence))
-        postags = list(self.postagger.postag(words))
+    def parser_main(self, HanLP, sentence):
+
+        doc = HanLP(sentence, tasks=['tok/fine','pos/pku', 'ner/msra'])
+        words = doc['tok/fine']
+        postags = doc['pos/pku']
+
+        # words = list(self.segmentor.segment(sentence))
+        # postags = list(self.postagger.postag(words))
 
         words, postags = self.correct_mqws(words, postags)
         postags = self.correct_postags(words, postags)
 
         arcs = self.parser.parse(words, postags) # 建立依存句法分析树
+        
         child_dict_list, format_parse_list = self.build_parse_child_dict(words, postags, arcs)
         roles_dict = self.format_labelrole(words, postags, arcs)
-        return words, postags, child_dict_list, roles_dict, format_parse_list
 
-# def words_postags():
-#     parse = LtpParser()
-#     sentence = '李克强总理今天来我家了,我感到非常荣幸'
-#     words, postags = parse.words_postags(sentence)
-#     print(words, len(words))
-#     print(postags, len(postags))
-#     # print(child_dict_list, len(child_dict_list))
-#     # print(roles_dict)
-#     # print(format_parse_list, len(format_parse_list))
+        return words, postags, child_dict_list, roles_dict, format_parse_list, doc
 
-# words_postags()
-if __name__ == '__main__':
-    parse = LtpParser()
-    sentence = '李克强总理今天来我家了,我感到非常荣幸'
-    words, postags, child_dict_list, roles_dict, format_parse_list = parse.parser_main(sentence)
-    print(words, len(words))
-    print(postags, len(postags))
-    # print(child_dict_list, len(child_dict_list))
-    # print(roles_dict)
-    # print(format_parse_list, len(format_parse_list))

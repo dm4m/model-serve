@@ -3,7 +3,7 @@ import sys
 # sys.path.append('/data/bwj/project/model-serve/models')
 from novelty.compare import novelty_compare
 from repository.mysql_source import get_sig_by_id
-from services.analysis_service import signory_item_analysis
+from services.novelty_service import signory_item_analysis
 import pymysql
 
 def test_get_sig_by_id():
@@ -33,5 +33,5 @@ if __name__ == '__main__':
     # test_get_sig_by_id()
     #  models.init_app()
     # test_signory_item_analysis()
-    # test_novelty_compare()
-    test_mysql()
+    test_novelty_compare()
+    # test_mysql()

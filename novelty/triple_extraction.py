@@ -1,15 +1,9 @@
-#!/usr/bin/env python3
-# coding: utf-8
-# File: triple_extraction.py
-# Author: lhy<lhy_in_blcu@126.com,https://huangyong.github.io>
-# Date: 18-3-12
 from .sentence_parser import *
-from . import parser
 import re
 
 class TripleExtractor:
     def __init__(self):
-        self.parser = parser
+        self.parser = LtpParser()
 
     '''文章分句处理, 切分长句，冒号，分号，感叹号等做切分标识'''
     def split_sents(self, content):
@@ -64,7 +58,7 @@ class TripleExtractor:
         return '4', []
 
     '''三元组抽取主函数'''
-    def ruler2(self, words, postags, child_dict_list, arcs, roles_dict):
+    def ruler2(self, words, postags, child_dict_list, arcs, roles_dict, doc):
         svos = []
         for index in range(len(postags)):
             tmp = 1
@@ -152,6 +146,15 @@ class TripleExtractor:
                                         if triple != [] and triple not in svos:
                                             svos.append(triple)
                                             # print("三元组--动词在最后:",triple)
+
+        for ner in doc['ner/msra']:
+            idx = doc['tok/fine'].index(ner[0])
+            if idx != -1:
+                if idx - 1 >= 0 and doc['pos/pku'][idx - 1] == 'n' and doc['tok/fine'][idx - 1] not in ['权利要求']:
+                    svos.append([doc['tok/fine'][idx-1],'为', ner[0]])
+                elif idx + 1 < len(doc['tok/fine']) and doc['pos/pku'][idx + 1] == 'n' and doc['tok/fine'][idx + 1] not in ['权利要求']:
+                    svos.append([doc['tok/fine'][idx + 1], '为', ner[0]])
+
         return svos
 
     # 对找出的主语或者宾语进行扩展
@@ -212,27 +215,27 @@ class TripleExtractor:
             return triple
 
     '''程序主控函数'''
-    def sovereigns_triples(self, content):
+    def sovereigns_triples(self, HanLP, content):
         sentences = self.split_sents(content)
         svos = []
         for sentence in sentences:
-            words, postags, child_dict_list, roles_dict, arcs = self.parser.parser_main(sentence)
+            words, postags, child_dict_list, roles_dict, arcs, doc = self.parser.parser_main(HanLP, sentence)
             # relation={arcs[24][0]}, word={arcs[24][1]}, id={arcs[24][2]}, postag={arcs[24][3]}
             # rely_word={arcs[24][4]}, rely_id={arcs[24][5]}, rely_postag={arcs[24][6]}
-            svo = self.ruler2(words, postags, child_dict_list, arcs, roles_dict)
+            svo = self.ruler2(words, postags, child_dict_list, arcs, roles_dict, doc)
             svos += svo
         return svos
 
 def content_process(content):
     content = re.sub(u"\\(.*?\\)", "", content) # 去除(21)等括号及括号内的内容
     content = re.sub(u" ", "", content) # 去除空格
-    # flag = content.index('.')
-    # content = content[flag+1:]
+    flag = content.index('.')
+    content = content[flag+1:]
     return content
 
 
 '''测试'''
-def triple_extraction_main(sovereign_content):
+def triple_extraction_main(HanLP, sovereign_content):
     
     extractor = TripleExtractor()
 
@@ -242,6 +245,7 @@ def triple_extraction_main(sovereign_content):
     sentences_list.append(content)
 
     content = content_process(content)
-    svos_list = extractor.sovereigns_triples(content)
+    svos_list = extractor.sovereigns_triples(HanLP, content)
 
     return sentences_list, svos_list, extractor
+

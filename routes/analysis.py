@@ -2,9 +2,9 @@ import io
 from flask import Flask, request, jsonify, Blueprint
 from flask_cors import *
 import pdfplumber
-from services.analysis_service import *
+from services.novelty_service import *
 
-import services.analysis_service
+import services.novelty_service
 
 analysis_bp = Blueprint('analysis_bp', __name__)
 
