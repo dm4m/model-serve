@@ -206,7 +206,6 @@ class Babeluse:
                         meronym_list.append(lemma)
         return meronym_list
 
-
     def get_related(self,word):
         synsets = bn.get_synsets(word, from_langs=[Language.ZH])
         relate_list = {}

@@ -1,9 +1,10 @@
 from .sentence_parser import *
+from . import parser
 import re
 
 class TripleExtractor:
     def __init__(self):
-        self.parser = LtpParser()
+        self.parser = parser
 
     '''文章分句处理, 切分长句，冒号，分号，感叹号等做切分标识'''
     def split_sents(self, content):
