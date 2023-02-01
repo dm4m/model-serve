@@ -17,8 +17,8 @@ class Comparator:
 
     def sovereign_compare(self, extractor, hownet, parser, HanLP, bu, sovereign_sentence_1, sovereign_triples_1, sovereign_sentence_2, sovereign_triples_2):
 
-        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
-        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
+        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
         
         review_flag = 0
         review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项："{sovereign_sentence_2}"\n审查意见：\n'
