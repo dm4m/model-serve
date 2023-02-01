@@ -156,51 +156,59 @@ class Comparator:
                 review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性\n"
 
         if review_flag == review_flag_temp:
-            t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
-            t1_e2_hypernym = bu.hypernym(triple_copy_1[2])
-            t1_e1_hyponymy = bu.hyponymy(triple_copy_1[0]) # 下位词
-            t1_e2_hyponymy = bu.hyponymy(triple_copy_1[2])
+            # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
+            # t1_e2_hypernym = bu.hypernym(triple_copy_1[2])
+            # t1_e1_hyponymy = bu.hyponymy(triple_copy_1[0]) # 下位词
+            # t1_e2_hyponymy = bu.hyponymy(triple_copy_1[2])
             t2_e1_hypernym = bu.hypernym(triple_copy_2[0]) # 上位词
             t2_e2_hypernym = bu.hypernym(triple_copy_2[2])
             t2_e1_hyponymy = bu.hyponymy(triple_copy_2[0]) # 下位词
             t2_e2_hyponymy = bu.hyponymy(triple_copy_2[2])
 
             if triple_copy_1[0] != triple_copy_2[0]:
-                if triple_copy_1[0] in t2_e1_hypernym or triple_copy_2[0] in t1_e1_hyponymy: # 上位-下位
+                # if triple_copy_1[0] in t2_e1_hypernym or triple_copy_2[0] in t1_e1_hyponymy: # 上位-下位
+                if triple_copy_1[0] in t2_e1_hypernym:  # 上位-下位
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
-                if triple_copy_1[0] in t2_e1_hyponymy or triple_copy_2[0] in t1_e1_hypernym: # 下位-上位
+                # if triple_copy_1[0] in t2_e1_hyponymy or triple_copy_2[0] in t1_e1_hypernym: # 下位-上位
+                if triple_copy_1[0] in t2_e1_hyponymy:  # 下位-上位
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
 
             if triple_copy_1[0] != triple_copy_2[2]:
-                if triple_copy_1[0] in t2_e2_hypernym or triple_copy_2[2] in t1_e1_hyponymy: # 上-下
+                # if triple_copy_1[0] in t2_e2_hypernym or triple_copy_2[2] in t1_e1_hyponymy: # 上-下
+                if triple_copy_1[0] in t2_e2_hypernym:  # 上-下
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
-                if triple_copy_1[0] in t2_e2_hyponymy or triple_copy_2[2] in t1_e1_hypernym: # 下-上
+                # if triple_copy_1[0] in t2_e2_hyponymy or triple_copy_2[2] in t1_e1_hypernym: # 下-上
+                if triple_copy_1[0] in t2_e2_hyponymy:  # 下-上
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
 
             if triple_copy_1[2] != triple_copy_2[0]:
-                if triple_copy_1[2] in t2_e1_hypernym or triple_copy_2[0] in t1_e2_hyponymy: # 上-下
+                # if triple_copy_1[2] in t2_e1_hypernym or triple_copy_2[0] in t1_e2_hyponymy: # 上-下
+                if triple_copy_1[2] in t2_e1_hypernym:  # 上-下
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
-                if triple_copy_1[2] in t2_e1_hyponymy or triple_copy_2[0] in t1_e2_hypernym: # 下-上
+                # if triple_copy_1[2] in t2_e1_hyponymy or triple_copy_2[0] in t1_e2_hypernym: # 下-上
+                if triple_copy_1[2] in t2_e1_hyponymy:  # 下-上
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
 
             if triple_copy_1[2] != triple_copy_2[2]:
-                if triple_copy_1[2] in t2_e2_hypernym or triple_copy_2[2] in t1_e2_hyponymy: # 上-下
+                # if triple_copy_1[2] in t2_e2_hypernym or triple_copy_2[2] in t1_e2_hyponymy: # 上-下
+                if triple_copy_1[2] in t2_e2_hypernym:  # 上-下
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
-                if triple_copy_1[2] in t2_e2_hyponymy or triple_copy_2[2] in t1_e2_hypernym: # 下-上
+                # if triple_copy_1[2] in t2_e2_hyponymy or triple_copy_2[2] in t1_e2_hypernym: # 下-上
+                if triple_copy_1[2] in t2_e2_hyponymy:  # 下-上
                     print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
                     review_flag += 1
                     review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
@@ -469,10 +477,13 @@ def search_related_main():
 def novelty_compare(main_sig, com_sig):
     review_opinion = ''
 
+    highlight(HanLP, main_sig)
+    highlight(HanLP, com_sig)
+
     patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
     patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
     comparator = Comparator()
     # 输出
     review_opinion += comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list, patent_1_sovs_list, patent_2_sentences_list, patent_2_sovs_list)
-    print(review_opinion)
+    # print(review_opinion)
     return review_opinion

@@ -229,8 +229,8 @@ class TripleExtractor:
 def content_process(content):
     content = re.sub(u"\\(.*?\\)", "", content) # 去除(21)等括号及括号内的内容
     content = re.sub(u" ", "", content) # 去除空格
-    flag = content.index('.')
-    content = content[flag+1:]
+    # flag = content.index('.')
+    # content = content[flag+1:]
     return content
 
 
