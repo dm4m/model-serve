@@ -40,6 +40,14 @@ class Comparator:
         
         return review_opinion
 
+    def relations_translation(self, relations):
+        relations_chinese = []
+        for i in relations:
+            relations_chinese.append(relations_map[i]) if relations_map[i] not in relations_chinese else None
+
+        return relations_chinese
+
+
     # 两句主权项对比word-level高亮显示
     def wordlevel_point(self, review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2):
         # 词之间的关系比较
@@ -53,9 +61,10 @@ class Comparator:
                     relation = hownet.get_synset_relation(word1[0],word2[0])
                     if relation!=[] and [word1[0],word2[0],relation] not in words_realtion:
                         words_realtion.append([word1[0],word2[0],relation])
-                        print(f"{word1[0]} {word2[0]} {relation}")
+                        # print(f"{word1[0]} {word2[0]} {relation}")
+                        print(f"{word1[0]} {word2[0]} {self.relations_translation(relation)}")
                         review_flag += 1
-                        review_opinion += f"{word1[0]} {word2[0]} {relation}\n"
+                        review_opinion += f"{word1[0]} {word2[0]} {self.relations_translation(relation)}\n"
                     # if relation!=[] and [word1,word2,relation] not in words_realtion:
                     #     words_realtion.append([word1,word2,relation])
                     #     print(f"{word1} {word2} {relation}")
@@ -475,11 +484,12 @@ def search_related_main():
     search_related(HanLP, bu, sovereign_content_2)
 
 def novelty_compare(main_sig, com_sig):
+
     review_opinion = ''
     patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
     patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
     comparator = Comparator()
     # 输出
     review_opinion += comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list, patent_1_sovs_list, patent_2_sentences_list, patent_2_sovs_list)
-    # print(review_opinion)
+    # print(review_opionion)
     return review_opinion

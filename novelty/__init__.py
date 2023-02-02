@@ -18,9 +18,16 @@ def init_hanlp():
     HanLP['tok/fine'].dict_combine = dict
     return HanLP
 
+def init_relations_translation():
+    relations_map = {}
+    with open(os.path.dirname(__file__)  + '/data/relations_translation.txt', 'r') as f:
+        for line in f:
+            relations_map[line.strip('\n').split('\t')[0]] = line.strip('\n').split('\t')[1]
+    return relations_map
 
 hownet = OpenHowNet.HowNetDict(init_sim=True, init_babel=True)
 parser = LtpParser()
 HanLP = init_hanlp()
 bu = Babeluse(20)
+relations_map = init_relations_translation()
 
