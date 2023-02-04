@@ -40,8 +40,6 @@ class cladata:#基类
         self.title=title
         self.db=db
 
-    
-        
 
 class authoranaly(cladata):#申请人分析
 
@@ -125,8 +123,6 @@ class authoranaly(cladata):#申请人分析
         self.dic=dic
         return dic
 
-
-
   
 class areaanaly(cladata):#地域分析
     
@@ -174,6 +170,7 @@ class areaanaly(cladata):#地域分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
+        str(my_base64_jpgData, encoding='utf-8')
         return my_base64_jpgData   
 
 
@@ -276,10 +273,7 @@ class trendanaly(cladata):#趋势分析
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())         
         return my_base64_jpgData
-                
-     
 
-    
     
 def myinput(list): #将系统的输入转换成sql语句中所要的格式
     mystr='('
@@ -290,17 +284,21 @@ def myinput(list): #将系统的输入转换成sql语句中所要的格式
     mystr+=')'
     return mystr
 
+
 def trendsql(stime,etime,list):#趋势分析sql语句
     sqlstr="SELECT substring(main_class_list,1,INSTR(main_class_list,'/')-1) as clss_type, substring(publication_date,1,4) as pub_year,count(patent_type) as cnt FROM patent.patent where substring(publication_date,1,4)<="+str(etime)+" "+"and substring(publication_date,1,4)>="+str(stime)+" "+"and id in"+myinput(list)+" "+"group by substring(main_class_list,1,INSTR(main_class_list,'/')-1),pub_year"      
     return sqlstr
+
 
 def authorsql(list):#发明人分析sql语句
     sqlstr="select id,inventor_list from patent.patent where id in "+myinput(list)
     return sqlstr
 
+
 def areasql(list):#地域分析sql语句
     sqlstr="select count(c2),c2 from(SELECT  applicant_area,CONCAT(substring(applicant_area,1,INSTR(applicant_area,';')-1) ,substring(applicant_area,1,INSTR(applicant_area,'(')-1))  as c2 FROM patent.patent where id in "+myinput(list)+" ) as ttt group by c2"
     return sqlstr
+
 
 # #申请人分析
 def author(list,type):
@@ -318,6 +316,7 @@ def author(list,type):
     output.append(dd.authorpie(dic,'234'))
     db.endconn() 
     return output
+
 
 # #趋势分析
 def trend(list,type):
@@ -351,7 +350,7 @@ def area(list,type):
     if type == "pie":
         output.append(dd.areapie(dic))
         db.endconn()
-        return output    
+        return output
     output.append(dd.areabar(dic))
     db.endconn()
     return output
