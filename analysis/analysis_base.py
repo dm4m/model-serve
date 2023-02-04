@@ -6,6 +6,7 @@ from matplotlib.ticker import MaxNLocator
 import matplotlib
 import io
 import base64
+import scipy.stats as st
 
 class mydb:#数据库操作类
 
@@ -307,6 +308,25 @@ def areasql(list):#地域分析sql语句
     return sqlstr
 
 
+def timecal(data):#时间置信区间计算
+    num=[]
+    for i in data:
+        num.append(int(i[1]))
+    result=st.norm.interval(alpha=0.99,loc=np.mean(num),scale=st.sem(num))
+    output=[]
+    if int(result[0]) == int(result[1]):
+        output.append(int(result[0])-1)
+        output.append(int(result[1])+1)
+    else:
+        output.append(int(result[0]))
+        output.append(int(result[1]))
+    return output
+    
+    
+def timesql(list):#置信区间计算SQL语句
+    sqlstr="SELECT  id,substring(publication_date,1,4) as pub_year FROM patent.patent where id in "+myinput(list)
+    return sqlstr
+
 # #申请人分析
 def author(list,type):
     db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
@@ -324,22 +344,22 @@ def author(list,type):
     db.endconn() 
     return output
 
-
 # #趋势分析
 def trend(list,type):
     db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    sqls=timesql(list)
+    db.myexecu(sqls)
+    timeblock=timecal(db.data)
     output=[]
-    sqls=trendsql(2000,2005,list)
+    sqls=trendsql(timeblock[0],timeblock[1],list)
     db.myexecu(sqls)
     dd=trendanaly(db,"234")
-    dic=dd.newdic(2000,2005)
+    dic=dd.newdic(timeblock[0],timeblock[1])
     if type == "bar":
-        output.append(dd.trendbar(dic,2000,2005))
-        db.endconn()
+        output.append(dd.trendbar(dic,timeblock[0],timeblock[1]))
         return output
     if type == "line":
-        output.append(dd.trendline(dic,2000,2005))
-        db.endconn()
+        output.append(dd.trendline(dic,timeblock[0],timeblock[1]))
         return output    
     for i in dd.trendpie(dic):
         output.append(i)
@@ -368,4 +388,9 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     if anaType == 'area':
         return area(patentIds,figType)
     return trend(patentIds,figType)
+
+
+
+
+
 
