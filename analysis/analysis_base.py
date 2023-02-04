@@ -67,7 +67,8 @@ class authoranaly(cladata):#申请人分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        return my_base64_jpgData
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output
 
 
     def authorbar(self,dic):#绘制柱状图
@@ -93,7 +94,8 @@ class authoranaly(cladata):#申请人分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        return my_base64_jpgData
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output
         
     def authorlist(self):#将数据中所有作者解析
         dic={}
@@ -155,7 +157,8 @@ class areaanaly(cladata):#地域分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read()) 
-        return my_base64_jpgData     
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output    
 
     def areapie(self,dic):#绘制饼状图
         plt.rcParams['font.family'] = 'SimHei'
@@ -170,8 +173,9 @@ class areaanaly(cladata):#地域分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
-        str(my_base64_jpgData, encoding='utf-8')
-        return my_base64_jpgData   
+        print(my_base64_jpgData)
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output  
 
 
 class trendanaly(cladata):#趋势分析
@@ -213,8 +217,9 @@ class trendanaly(cladata):#趋势分析
         plt.savefig(my_stringIObytes, format='jpg')
         plt.close()
         my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        return my_base64_jpgData
+        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output
                 
     def trendline(self,dic,stime,etime):#绘制折线图
         plt.figure(2)
@@ -239,7 +244,8 @@ class trendanaly(cladata):#趋势分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        return my_base64_jpgData 
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output
 
                 
     def trendbar(self,dic,stime,etime):#绘制时间趋势柱状图     
@@ -272,7 +278,8 @@ class trendanaly(cladata):#趋势分析
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())         
-        return my_base64_jpgData
+        output=str(my_base64_jpgData,encoding='utf-8')           
+        return output
 
     
 def myinput(list): #将系统的输入转换成sql语句中所要的格式
@@ -354,3 +361,11 @@ def area(list,type):
     output.append(dd.areabar(dic))
     db.endconn()
     return output
+
+def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
+    if anaType == 'author':
+        return author(patentIds,figType)
+    if anaType == 'area':
+        return area(patentIds,figType)
+    return trend(patentIds,figType)
+
