@@ -64,7 +64,7 @@ class authoranaly(cladata):#申请人分析
         plt.pie(x,labels=mydic.keys(),labeldistance=1.2,autopct='%1.2f%%',shadow=True,startangle=90,radius=4,pctdistance=1.1)
         plt.legend()
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
@@ -91,7 +91,7 @@ class authoranaly(cladata):#申请人分析
                 break
         plt.bar(X , Y)                 
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
@@ -154,7 +154,7 @@ class areaanaly(cladata):#地域分析
                 Y.append(int(value))
         plt.bar(X , Y)             
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read()) 
@@ -170,7 +170,7 @@ class areaanaly(cladata):#地域分析
         plt.pie(x,labels=dic.keys(),labeldistance=1.2,autopct='%10.1f%%',shadow=True,startangle=90,radius=4,pctdistance=0.7)
         plt.legend()
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
@@ -215,7 +215,7 @@ class trendanaly(cladata):#趋势分析
         plt.pie(x,labels=dic.keys(),labeldistance=1.2,autopct='%10.1f%%',shadow=True,startangle=90,radius=4,pctdistance=0.7)
         plt.legend()
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
@@ -241,7 +241,7 @@ class trendanaly(cladata):#趋势分析
             plt.plot(X , Y,label=upkey,marker='o')           
         plt.legend()
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
         my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
@@ -275,10 +275,10 @@ class trendanaly(cladata):#趋势分析
             wid+=1
         plt.legend()          
         my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg')
+        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
         plt.close()
         my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())         
+        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())          
         output=str(my_base64_jpgData,encoding='utf-8')           
         return output
 
@@ -388,6 +388,8 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     if anaType == 'area':
         return area(patentIds,figType)
     return trend(patentIds,figType)
+
+
 
 
 
