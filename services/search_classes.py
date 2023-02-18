@@ -2,27 +2,9 @@ import numpy as np
 from models import tokenizer, model, device
 
 def encode(query):
-    # input: text
-    # output: embeddings in type IVF_SQ8
     pt_inputs = tokenizer(query, return_tensors="pt").to(device)
     pt_outputs = model(**pt_inputs)
     query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
-
-    # w_vec = query_embeddings / np.linalg.norm(query_embeddings)
-    # w_vec = w_vec.tolist()
-    # # turn to type IVF_SQ8
-    # maxi = max(w_vec[0])
-    # mini = min(w_vec[0])
-    # length = maxi - mini
-    # int8_vec = []
-    # for i in w_vec[0]:
-    #     temp = (i-mini)/length
-    #     if temp > 1:
-    #         int8_vec.append(int(1*80))
-    #     elif temp < 0:
-    #         int8_vec.append(int(0 * 80))
-    #     else:
-    #         int8_vec.append(int(temp * 80))
     return query_embeddings
 
 def aggregate(id_score_list):
