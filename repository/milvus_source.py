@@ -24,13 +24,14 @@ def get_relevant_all_field_results(collection_name, field, schema, query_embeddi
     ids= []
     primary_id = []
     embed = []
-
+    
     connections.connect(alias="default", host='localhost', port='19530')
     collection = Collection(name=collection_name, schema=schema, using='default')
     collection.load()
     search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
     results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params, limit=limit,
                                     expr=None)
+
     for hits in results:
         for hit in hits:
             ids.append(hit.entity.get('patent_id'))
