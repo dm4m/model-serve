@@ -1,8 +1,7 @@
 import sys
-import os
-sys.path.append('/data/bwj/project/model-serve/novelty')
-sys.path.append('/data/bwj/project/model-serve/models')
-sys.path.append('/data/bwj/project/model-serve/services')
+# sys.path.append('/data/bwj/project/model-serve/novelty')
+# sys.path.append('/data/bwj/project/model-serve/models')
+# sys.path.append('/data/bwj/project/model-serve/services')
 from novelty.compare import novelty_compare
 from services.search_service import search_by_patent
 
@@ -23,10 +22,10 @@ def test_search_by_patent():
         "4.根据权利要求1所述的带粘合剂层的偏振膜，其中，所述偏振片的氧气透过率为1[cm3/(m2·24h·atm)]以下。",
         "5.根据权利要求1所述的带粘合剂层的偏振膜，其中，所述粘合剂层的厚度为25μm以下。",
         "6.一种图像显示设备，具备权利要求1所述的带粘合剂层的偏振膜。"]
-    idlist_1 = search_by_patent(patent_signory_list_1)
+    
     # patent_id_2 = 562
     # patent_signory_list_2 = ["1、一种烟花鞭炮火药彩光氧化剂，其特征在于由下列重量份额的原料混合制成：高氯酸钾30-80、硝酸钡10-40、阻燃剂10-30。"]
-    # idlist_2 = search_by_patent(patent_signory_list_2)
+    idlist_1 = search_by_patent(patent_signory_list_1)
     print("origin_id:{},search_top3_id:{}".format(patent_id_1,idlist_1[0:3]))
 
 
