@@ -1,6 +1,6 @@
+import torch
 from flask import jsonify
 from pymilvus import CollectionSchema, FieldSchema,DataType
-import torch
 from repository.milvus_source import get_relevant_id_list, get_relevant_vec_results,get_relevant_all_field_results
 from services.search_classes import aggregate,rerank,encode
 
