@@ -26,7 +26,7 @@ class Comparator:
         # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
 
         # 词比较
-        review_flag, review_opinion = self.wordlevel_point(review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2)
+        review_flag, review_opinion, words_info = self.wordlevel_point(review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2)
 
         # 三元组比较
         for i in range(len(sovereign_triples_1)):
@@ -39,13 +39,12 @@ class Comparator:
             print('暂未触发相关规则。')
             review_opinion += '暂未触发相关规则。\n'
         
-        return review_opinion
+        return review_opinion, words_info
 
     def relations_translation(self, relations):
         relations_chinese = []
         for i in relations:
             relations_chinese.append(relations_map[i]) if relations_map[i] not in relations_chinese else None
-
         return relations_chinese
 
 
@@ -56,6 +55,7 @@ class Comparator:
         doc_1 = HanLP(sovereign_sentence_1, tasks=['tok/fine','pos/pku','sdp','ner'])
         doc_2 = HanLP(sovereign_sentence_2, tasks=['tok/fine','pos/pku','sdp','ner'])
         words_realtion = []
+        words_info = []
         for index1,word1 in enumerate(doc_1['tok/fine'][0]):
             for index2,word2 in enumerate(doc_2['tok/fine'][0]):
                 if doc_1['pos/pku'][0][index1]=='n' and doc_2['pos/pku'][0][index2]=='n' and word1[0]!=word2[0] and word1[0]!='特征' and word2[0]!='特征':
@@ -63,7 +63,9 @@ class Comparator:
                     if relation!=[] and [word1[0],word2[0],relation] not in words_realtion:
                         words_realtion.append([word1[0],word2[0],relation])
                         # print(f"{word1[0]} {word2[0]} {relation}")
-                        print(f"{word1[0]} {word2[0]} {self.relations_translation(relation)}")
+                        # print(f"{word1[0]} {word2[0]} {self.relations_translation(relation)}")
+                        words_info.append([word1, word2, self.relations_translation(relation)])
+                        print(f"{word1} {word2} {self.relations_translation(relation)}")
                         review_flag += 1
                         review_opinion += f"{word1[0]} {word2[0]} {self.relations_translation(relation)}\n"
                     # if relation!=[] and [word1,word2,relation] not in words_realtion:
@@ -73,7 +75,8 @@ class Comparator:
                     #     review_opinion += f"{word1} {word2} {relation}\n"
         HanLP['tok/fine'].config.output_spans = False
 
-        return review_flag, review_opinion
+        print("words_info:", words_info)
+        return review_flag, review_opinion, words_info
 
     def substitution_words(self, bu, triple, flag):
         substitution_words = []
@@ -504,7 +507,7 @@ def novelty_compare(main_sig, com_sig):
     patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
     comparator = Comparator()
     # 输出
-    review_opinion = comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list, patent_1_sovs_list, patent_2_sentences_list, patent_2_sovs_list)
+    review_opinion, words_info = comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list, patent_1_sovs_list, patent_2_sentences_list, patent_2_sovs_list)
 
     # print(f'\nreview_opinion:\n{review_opinion}***\n')
-    return review_opinion
+    return review_opinion, words_info
