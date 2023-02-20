@@ -35,8 +35,8 @@ class Comparator:
                 review_flag, review_opinion = self.numeric_range_compare(review_flag, review_opinion, extractor, hownet, parser, HanLP, bu, sovereign_triples_1[i], sovereign_triples_2[j])
 
         if review_flag == 0:
-            print('暂未触发相关规则，但存在共有主题词')
-            review_opinion += '暂未触发相关规则，但存在共有主题词\n'
+            print('暂未触发相关规则。')
+            review_opinion += '暂未触发相关规则。\n'
         
         return review_opinion
 
@@ -280,9 +280,9 @@ class Comparator:
     
     # [40, 40, '℃']，[50, 100, '毫米']
     def e2_number_range_without_n(self, parser, HanLP, sentence):
-        words, postags = parser.words_postags(HanLP, sentence)
+        words, postags = parser.number_range_words_postags(HanLP, sentence)
         # print(f"words:{words}\npostags:{postags}")
-        str_postags = ''.join(postags)
+        # str_postags = ''.join(postags)
         number_range_list = []
 
         if 'w' in postags: # start, end, 单位。词性wp，表示~
@@ -315,12 +315,22 @@ class Comparator:
                 # if 'q' in postags[i:]: # 词性q，表示单位
                 q_id = postags.index('q',i)
                 if q_id-1 >= 0 and postags[q_id-1] == 'm':
-                    start = float(words[q_id-1][0:-1])/100 if '%' in words[q_id-1] or '％' in words[q_id-1] else float(words[q_id-1])
-                    end = float(words[q_id-1][0:-1])/100 if '%' in words[q_id-1] or '％' in words[q_id-1] else float(words[q_id-1])
-                    unit = words[q_id]
-                    number_range_list.append([start, end, unit])
-                    # number_range_list = [start, end, unit]
-                    i = q_id + 1
+                    isdigit_flag = 0
+                    if ('%' in words[q_id - 1] or '％' in words[q_id - 1]) and words[q_id-1][0:-1].isdigit():
+                        start = float(words[q_id-1][0:-1])/100
+                        end = start
+                        isdigit_flag += 1
+                    if '%' not in words[q_id - 1] and '％' not in words[q_id - 1] and words[q_id-1].isdigit():
+                        start = float(words[q_id-1])
+                        end = start
+                        isdigit_flag += 1
+                    # start = float(words[q_id-1][0:-1])/100 if ('%' in words[q_id-1] or '％' in words[q_id-1]) else float(words[q_id-1])
+                    # end = float(words[q_id-1][0:-1])/100 if ('%' in words[q_id-1] or '％' in words[q_id-1]) else float(words[q_id-1])
+                    if isdigit_flag > 0:
+                        unit = words[q_id]
+                        number_range_list.append([start, end, unit])
+                        # number_range_list = [start, end, unit]
+                        i = q_id + 1
                 # else:
                 #     break
             i = 0 
@@ -484,6 +494,9 @@ def search_related_main():
     search_related(HanLP, bu, sovereign_content_2)
 
 def novelty_compare(main_sig, com_sig):
+
+    # doc = HanLP("根据权利要求1-4任一项所述的炸药，其特征在于，所述纳米玄武岩粉的粒径为10-100nm。", tasks=['tok/fine', 'pos/pku', 'sdp', 'srl', 'ner'])
+    # print(doc)
 
     review_opinion = ''
     patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)

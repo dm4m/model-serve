@@ -1,4 +1,6 @@
 import os
+import re
+
 from pyltp import Segmentor, Postagger, Parser, NamedEntityRecognizer, SementicRoleLabeller
 
 
@@ -161,9 +163,60 @@ class LtpParser:
                 postags[i+1] = 'n'
         return postags
 
+    def one_number(self, number, unit):
+        word = []
+        postag = []
+        if len(unit) == 0:
+            word.append(number)
+            postag.append('m')
+        else:
+            if '%' in unit:
+                word.append(number + '%')
+                postag.append('m')
+                word.append(unit[1:]) if unit[1:] != '' else None
+                postag.append('q') if unit[1:] != '' else None
+            else:
+                word.append(number)
+                word.append(unit)
+                postag.append('m')
+                postag.append('q')
+        return word, postag
+
+    def number_range_words_postags(self, HanLP, sentence):
+
+        number_list = re.findall(r'\d+', sentence)
+        unit_list = re.findall(r'\D+', sentence)
+        words = []
+        postags = []
+        if len(number_list) == 1:
+            words, postags = self.one_number(number_list[0], unit_list[0]) if unit_list!=[] else self.one_number(number_list[0], [])
+
+        if '-' in sentence and len(number_list) == 2:
+            split_sentence = sentence.split('-')
+
+            number_1 = re.findall(r'\d+', split_sentence[0])
+            unit_1 = re.findall(r'\D+', split_sentence[0])
+            words_temp_1, postags_temp_1 = self.one_number(number_1[0], unit_1[0]) if unit_1!=[] else self.one_number(number_1[0], [])
+            words += words_temp_1
+            postags += postags_temp_1
+
+            words += '-'
+            postags += 'w'
+
+            number_2 = re.findall(r'\d+', split_sentence[1])
+            unit_2 = re.findall(r'\D+', split_sentence[1])
+            words_temp_2, postags_temp_2 = self.one_number(number_2[0], unit_2[0]) if unit_2!=[] else self.one_number(number_2[0], [])
+            words += words_temp_2
+            postags += postags_temp_2
+
+        if len(number_list) > 2:
+            words, postags = self.words_postags(HanLP, sentence)
+
+        return words, postags
+
 
     # 三元组的e2进行处理
-    def words_postags(self, HanLP, sentence):#此处先用hanlp分，如果分不开(分词数为1)再用ltp分
+    def words_postags(self, HanLP, sentence): #此处先用hanlp分，如果分不开(分词数为1)再用ltp分
 
         # words = list(self.segmentor.segment(sentence))
         # postags = list(self.postagger.postag(words))
@@ -198,22 +251,24 @@ class LtpParser:
                 postags_2.append(postags_1[i])
         # print("words_2,postags_2:",words_2,postags_2)
 
-        # -10.0 % : m wp
-        words_3 = []
-        postags_3 = []
-        i = 0
-        # while(i<=len(words_2)-2):
-        for i in range(len(words_2)):
-            if postags_2[i] == 'm' and '-' in words_2[i]:
-                words_3.append('-')
-                postags_3.append('wp')
-                words_3.append(words_2[i].replace('-',''))
-                postags_3.append('m')
-            else:
-                words_3.append(words_2[i])
-                postags_3.append(postags_2[i])
-        # print("words_3,postags_3:",words_3,postags_3)
-        
+        # # -10.0 % : m wp
+        # words_3 = []
+        # postags_3 = []
+        # i = 0
+        # # while(i<=len(words_2)-2):
+        # for i in range(len(words_2)):
+        #     if postags_2[i] == 'm' and '-' in words_2[i]:
+        #         words_3.append('-')
+        #         postags_3.append('wp')
+        #         words_3.append(words_2[i].replace('-',''))
+        #         postags_3.append('m')
+        #     else:
+        #         words_3.append(words_2[i])
+        #         postags_3.append(postags_2[i])
+        # # print("words_3,postags_3:",words_3,postags_3)
+
+        words_3 = words_2
+        postags_3 = postags_2
         words_4 = []
         postags_4 = []
         i = 0
@@ -236,6 +291,11 @@ class LtpParser:
 
     '''parser主函数'''
     def parser_main(self, HanLP, sentence):
+
+        table = {ord(f): ord(t) for f, t in zip(
+            u'～~，。！？【】（）％＃＠＆１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
+            u'--,.!?[]()%#@&1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')}
+        sentence = sentence.translate(table)
 
         doc = HanLP(sentence, tasks=['tok/fine','pos/pku', 'ner/msra'])
         words = doc['tok/fine']
