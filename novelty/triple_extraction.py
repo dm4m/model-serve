@@ -70,12 +70,11 @@ class TripleExtractor:
                     triple = self.svo_process(triple, words, postags)
                     # triple[0] = self.complete_e(words, postags, child_dict_list, child_dict['SBV'][0], arcs)
                     # triple[2] = self.complete_e(words, postags, child_dict_list, child_dict['VOB'][0], arcs)
-                    triple[2] = self.complete_m(words, postags, words.index(triple[2]), arcs) if triple[2] in words else triple[2]
-                    # if words.index(triple[2]):
-                    #     triple[2] = self.complete_m(self, words, postags, words.index(triple[2]), arcs)
-                    svos.append(triple)
-                    # print("三元组--语义角色标注:", triple)
-                    tmp = 0
+                    if triple != []:
+                        triple[2] = self.complete_m(words, postags, words.index(triple[2]), arcs) if triple[2] in words else triple[2]
+                        svos.append(triple)
+                        # print("三元组--语义角色标注:", triple)
+                        tmp = 0
             if tmp == 1:
                 # 如果语义角色标记为空，则使用依存句法进行抽取
                 # if postags[index] == 'v':
@@ -200,9 +199,15 @@ class TripleExtractor:
         triple[0] = triple[0].replace('所述', '')
         triple[1] = triple[1].replace('所述', '')
         triple[2] = triple[2].replace('所述', '')
-        if '其特征' in triple[0] and '权利要求' in triple[1]:
+        if '其特征' in triple[0]:
             triple = []
             return triple
+        if '权利要求' in triple[0] or '权利要求' in triple[1] or '权利要求' in triple[2]:
+            triple = []
+            return triple
+        # if '其特征' in triple[0] and '权利要求' in triple[1]:
+        #     triple = []
+        #     return triple
 
         for i in range(3):
             if triple[i] in words and postags[words.index(triple[i])]=='u': # u 助词
@@ -230,6 +235,7 @@ class TripleExtractor:
 def content_process(content):
     content = re.sub(u"\\(.*?\\)", "", content) # 去除(21)等括号及括号内的内容
     content = re.sub(u" ", "", content) # 去除空格
+    content = re.sub(u"℃", "摄氏度", content)  # 去除空格
     # flag = content.index('.')
     # content = content[flag+1:]
     return content
