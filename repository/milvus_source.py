@@ -10,6 +10,8 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
     query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
     print("query vector:" + str(query_embeddings))
     search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
+    # 以下查询参数均为HNSW准备，ef取值为top k到3w多
+    search_params_HNSW = {"ef":128}
     vec_results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params, limit=limit,
                                     expr=None)
     connections.disconnect("default")
@@ -24,20 +26,22 @@ def get_relevant_all_field_results(collection_name, field, schema, query_embeddi
     ids= []
     primary_id = []
     embed = []
-    
     connections.connect(alias="default", host='localhost', port='19530')
     collection = Collection(name=collection_name, schema=schema, using='default')
     collection.load()
-    search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
-    results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params, limit=limit,
+    # 非HNSW检索方式使用以下参数集合
+    search_params = {"metric_type": "L2", "params": {"nprobe": 100}}
+    # 以下查询参数均为HNSW准备，ef取值为top k-3w多
+    search_params_HNSW = {"metric_type":"L2","params":{"ef": 128}}
+    results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params_HNSW, limit=limit,
                                     expr=None)
-
     for hits in results:
         for hit in hits:
             ids.append(hit.entity.get('patent_id'))
             primary_id.append(hit.entity.get('signory_id'))
-    for i in range(0,len(primary_id)):
-        res2 = collection.query(expr = "signory_id in ["+str(primary_id[i])+"]",onsistency_level="Strong",output_fields=["signory"])
-        embed.append(res2[0]["signory"])
+    # 优化向量查询
+    res2 = collection.query(expr="signory_id in " + str(primary_id) + "", onsistency_level="Strong",
+                           output_fields=["signory"])
+    embed = list(map(lambda x:x["signory"],res2))
     connections.disconnect("default")
     return ids,embed,primary_id
