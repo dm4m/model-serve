@@ -5,15 +5,14 @@ import time
 from pymilvus import connections, Collection
 # 如果只append不起作用，则需要增加这一行
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-sys.path.append('/data/gmt/model-serve/novelty')
-sys.path.append('/data/gmt/model-serve/models')
-sys.path.append('/data/gmt/model-serve/services')
-sys.path.append('/data/gmt/model-serve/repository')
+sys.path.append('/data/bwj/project/model-serve/novelty')
+sys.path.append('/data/bwj/project/model-serve/models')
+sys.path.append('/data/bwj/project/model-serve/services')
+sys.path.append('/data/bwj/project/model-serve/repository')
 
 # from novelty.compare import novelty_compare
 from services.search_service import search_by_patent
 from repository.mysql_source import get_class_by_id
-from pymilvus import utility
 
 def test_novelty_compare():
     sovereign_content_1 = '一种炸药，其特征在于，所述炸药包括如下重量百分比的组分：'
