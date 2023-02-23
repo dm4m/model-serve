@@ -28,7 +28,7 @@ def patent_neural_search(field, query,schema=None):
         signory_id = FieldSchema(name="signory_id", dtype=DataType.INT64, is_primary=True,auto_id=False,description="")
         patent_id = FieldSchema(name="patent_id", dtype=DataType.INT64,description="")
         signory = FieldSchema(name="signory", dtype=DataType.FLOAT_VECTOR,dim=768,description="")
-        schema = CollectionSchema(fields=[signory_id, patent_id, signory],auto_id=False,description="signory_seg of patent")
+        schema = CollectionSchema(fields=[signory_id, patent_id, signory],auto_id=False,description="signory_seg of patent,HNSW")
         query_embeddings = encode(query)
         id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory_HNSW", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"])
         return_list = []
@@ -47,7 +47,6 @@ def search_by_patent(signory_list):
     signory = FieldSchema(name="signory", dtype=DataType.FLOAT_VECTOR, dim=768, description="")
     schema = CollectionSchema(fields=[signory_id, patent_id, signory], auto_id=False,
                               description="signory_seg of patent,HNSW")
-
     #主权项分项操作
     rawrank = []
     all_embed = []
@@ -56,7 +55,6 @@ def search_by_patent(signory_list):
         all_field_list = patent_neural_search("allField", signory_list[i],schema)
         rawrank.append(all_field_list)
         all_embed.append(now_embedding[0])
-
     # 向量加权操作
     last_query_embedding = torch.tensor([0.0 for i in range(0, 768)])
     temp_sig = np.add.reduce(all_embed[1:])
