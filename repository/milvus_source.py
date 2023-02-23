@@ -37,7 +37,7 @@ def get_relevant_all_field_results(collection_name, field, schema, query_embeddi
             ids.append(hit.entity.get('patent_id'))
             primary_id.append(hit.entity.get('signory_id'))
     for i in range(0,len(primary_id)):
-        res2 = collection.query(expr = "signory_id in ["+str(primary_id[i])+"]",onsistency_level="Strong",output_fields=["signory"])
+        res2 = collection.query(expr = "signory_id in ["+str(primary_id[i])+"]", onsistency_level="Strong", output_fields=["signory"])
         embed.append(res2[0]["signory"])
     connections.disconnect("default")
     return ids,embed,primary_id

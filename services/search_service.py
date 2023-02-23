@@ -1,7 +1,7 @@
 import torch
 from flask import jsonify
 from pymilvus import CollectionSchema, FieldSchema,DataType
-from repository.milvus_source import get_relevant_id_list, get_relevant_vec_results,get_relevant_all_field_results
+from repository.milvus_source import get_relevant_id_list, get_relevant_vec_results, get_relevant_all_field_results
 from services.search_classes import aggregate,rerank,encode
 
 def patent_neural_search(field, query):
@@ -50,4 +50,4 @@ def search_by_patent(signory_list):
             last_query_embedding += other_signory_weight*torch.tensor(now_embedding[0])
     last_other_embedding = aggregate(rawrank)
     rerank_list = rerank(last_query_embedding,last_other_embedding)
-    return rerank_list
+    return jsonify(rerank_list)
