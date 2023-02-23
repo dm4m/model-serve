@@ -58,6 +58,24 @@ class TripleExtractor:
         #     return '3', [v, o]
         return '4', []
 
+    def if_symbol_or_letter(self, keyword):
+        symbol_number = 0
+        symbols = "~!@#$%^&amp;*()_+-*/&lt;&gt;,.[]\/'\""
+        letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        if keyword in symbols+letters:
+            return True
+        else:
+            return False
+
+    def reserve_triple(self, triple):
+        if len(triple[0]) == 1 and self.if_symbol_or_letter(triple[0]):
+            return False
+        if len(triple[1]) == 1 and self.if_symbol_or_letter(triple[1]):
+            return False
+        if len(triple[2]) == 1 and self.if_symbol_or_letter(triple[2]):
+            return False
+        return True
+
     '''三元组抽取主函数'''
     def ruler2(self, words, postags, child_dict_list, arcs, roles_dict, doc):
         svos = []
@@ -72,7 +90,7 @@ class TripleExtractor:
                     # triple[2] = self.complete_e(words, postags, child_dict_list, child_dict['VOB'][0], arcs)
                     if triple != []:
                         triple[2] = self.complete_m(words, postags, words.index(triple[2]), arcs) if triple[2] in words else triple[2]
-                        svos.append(triple)
+                        svos.append(triple) if self.reserve_triple(triple) else None
                         # print("三元组--语义角色标注:", triple)
                         tmp = 0
             if tmp == 1:
@@ -89,7 +107,7 @@ class TripleExtractor:
                         # triple = [e1, r, e2]
                         triple = self.svo_process([e1, r, e2], words, postags)
                         if triple != [] and triple not in svos:
-                            svos.append(triple)
+                            svos.append(triple) if self.reserve_triple(triple) else None
                             # print("三元组--以谓词为中心:",triple)
 
 
@@ -117,7 +135,7 @@ class TripleExtractor:
                             if temp_string not in e1:
                                 triple = self.svo_process([e1, r, e2], words, postags)
                                 if triple != [] and triple not in svos:
-                                    svos.append(triple)
+                                    svos.append(triple) if self.reserve_triple(triple) else None
                                     # print("三元组--定语后置，动宾关系:",triple)
                     # 含有介宾关系的主谓动补关系
                     if 'SBV' in child_dict and 'CMP' in child_dict: # CMP动补
@@ -128,7 +146,7 @@ class TripleExtractor:
                             e2 = self.complete_e(words, postags, child_dict_list, child_dict_list[cmp_index]['POB'][0], arcs)
                             triple = self.svo_process([e1, r, e2], words, postags)
                             if triple != [] and triple not in svos:
-                                svos.append(triple)
+                                svos.append(triple) if self.reserve_triple(triple) else None
                                 # print("三元组--含有介宾关系的主谓动补关系:",triple)
 
                     if postags[index] == 'v' and 'SBV' in child_dict:
@@ -144,7 +162,7 @@ class TripleExtractor:
                                         e2 = self.complete_e(words, postags, child_dict_list, child_dict_list[adv_index]['POB'][0], arcs)
                                         triple = self.svo_process([e1, r, e2], words, postags)
                                         if triple != [] and triple not in svos:
-                                            svos.append(triple)
+                                            svos.append(triple) if self.reserve_triple(triple) else None
                                             # print("三元组--动词在最后:",triple)
 
         for ner in doc['ner/msra']:

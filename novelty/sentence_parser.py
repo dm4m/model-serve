@@ -306,7 +306,6 @@ class LtpParser:
 
         words, postags = self.correct_mqws(words, postags)
         postags = self.correct_postags(words, postags)
-
         arcs = self.parser.parse(words, postags) # 建立依存句法分析树
         
         child_dict_list, format_parse_list = self.build_parse_child_dict(words, postags, arcs)
