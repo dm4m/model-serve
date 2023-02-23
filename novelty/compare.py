@@ -11,15 +11,18 @@ import OpenHowNet
 import difflib
 import os
 
+import multiprocessing
+import time
+
 class Comparator:
     def __init__(self) -> None:
         pass
 
     def sovereign_compare(self, extractor, hownet, parser, HanLP, bu, sovereign_sentence_1, sovereign_triples_1, sovereign_sentence_2, sovereign_triples_2):
 
-        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
-        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
-        
+        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
+        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+
         review_flag = 0
         review_opinion = ''
         # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项："{sovereign_sentence_2}"\n审查意见：\n'
@@ -50,33 +53,87 @@ class Comparator:
 
     # 两句主权项对比word-level高亮显示
     def wordlevel_point(self, review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2):
-        # 词之间的关系比较
-        HanLP['tok/fine'].config.output_spans = True
-        doc_1 = HanLP(sovereign_sentence_1, tasks=['tok/fine','pos/pku','sdp','ner'])
-        doc_2 = HanLP(sovereign_sentence_2, tasks=['tok/fine','pos/pku','sdp','ner'])
-        words_realtion = []
-        words_info = []
-        for index1,word1 in enumerate(doc_1['tok/fine'][0]):
-            for index2,word2 in enumerate(doc_2['tok/fine'][0]):
-                if doc_1['pos/pku'][0][index1]=='n' and doc_2['pos/pku'][0][index2]=='n' and word1[0]!=word2[0] and word1[0]!='特征' and word2[0]!='特征':
-                    relation = hownet.get_synset_relation(word1[0],word2[0])
-                    if relation!=[] and [word1[0],word2[0],relation] not in words_realtion:
-                        words_realtion.append([word1[0],word2[0],relation])
-                        # print(f"{word1[0]} {word2[0]} {relation}")
-                        # print(f"{word1[0]} {word2[0]} {self.relations_translation(relation)}")
-                        words_info.append([word1, word2, self.relations_translation(relation)])
-                        print(f"{word1} {word2} {self.relations_translation(relation)}")
-                        review_flag += 1
-                        review_opinion += f"{word1[0]} {word2[0]} {self.relations_translation(relation)}\n"
-                    # if relation!=[] and [word1,word2,relation] not in words_realtion:
-                    #     words_realtion.append([word1,word2,relation])
-                    #     print(f"{word1} {word2} {relation}")
-                    #     review_flag += 1
-                    #     review_opinion += f"{word1} {word2} {relation}\n"
-        HanLP['tok/fine'].config.output_spans = False
+        # a = time.time()
 
-        print("words_info:", words_info)
-        return review_flag, review_opinion, words_info
+        sdp_feature_1, srl_feature_1, ner_feature_1 = highlight(sovereign_sentence_1)
+        # sdp_feature_2, srl_feature_2, ner_feature_2 = highlight(sovereign_sentence_2)
+
+        info_1 = []
+        for word in sdp_feature_1:
+            if word[0] not in info_1 and len(word[0]) <= 10:
+                info_1.append(word[0])
+        for word in ner_feature_1:
+            if word[0] not in info_1 and len(word[0]) <= 10:
+                info_1.append(word[0])
+        for word in srl_feature_1:
+            if word not in info_1 and len(word) <= 10:
+                info_1.append(word)
+
+        # info_2 = []
+        # for word in sdp_feature_2:
+        #     if word[0] not in info_2 and len(word[0]) <= 10:
+        #         info_2.append(word[0])
+        # for word in ner_feature_2:
+        #     if word[0] not in info_2 and len(word[0]) <= 10:
+        #         info_2.append(word[0])
+        # for word in srl_feature_2:
+        #     if word not in info_2 and len(word) <= 10:
+        #         info_2.append(word)
+
+        doc_2 = HanLP(sovereign_sentence_2, tasks=['tok/fine','pos/pku'])
+        words_2 = doc_2['tok/fine']
+        pos_2 = doc_2['pos/pku']
+
+        word_pairs = []
+        info_set = []
+        for word_1 in info_1:
+            for idx, word_2 in enumerate(words_2):
+                relation = hownet.get_synset_relation(word_1, word_2)
+                if pos_2[idx] == 'n' and [word_1, word_2] not in word_pairs and relation != []:
+                    word_pairs.append([word_1, word_2])
+                    info_set.append([word_1, word_2, self.relations_translation(relation)])
+
+        info_set_copy = info_set.copy()
+        for idx, info in enumerate(info_set_copy):
+            start_1 = sovereign_sentence_1.find(info[0])
+            start_2 = sovereign_sentence_2.find(info[1])
+            if start_1 != -1 and start_2 != -1:
+                end_1 = start_1 + len(info[0])
+                end_2 = start_2 + len(info[1])
+                info_set[idx].insert(1, [start_1, end_1])
+                info_set[idx].insert(3, [start_2, end_2])
+            else:
+                info_set.remove(info)
+
+        print("info_set:", info_set)
+        # b = time.time()
+        # print("wordlevel_point耗时：",b-a)
+
+
+        # # 词之间的关系比较
+        # HanLP['tok/fine'].config.output_spans = True
+        # doc_1 = HanLP(sovereign_sentence_1, tasks=['tok/fine','pos/pku','sdp','ner'])
+        # doc_2 = HanLP(sovereign_sentence_2, tasks=['tok/fine','pos/pku','sdp','ner'])
+        # words_realtion = []
+        # words_info = []
+        # for index1,word1 in enumerate(doc_1['tok/fine']):
+        #     for index2,word2 in enumerate(doc_2['tok/fine']):
+        #         if doc_1['pos/pku'][index1]=='n' and doc_2['pos/pku'][index2]=='n' and word1[0]!=word2[0] and word1[0]!='特征' and word2[0]!='特征':
+        #             relation = hownet.get_synset_relation(word1[0],word2[0])
+        #             if relation!=[] and [word1[0],word2[0],relation] not in words_realtion:
+        #                 words_realtion.append([word1[0],word2[0],relation])
+        #                 # print(f"{word1[0]} {word2[0]} {relation}")
+        #                 # print(f"{word1[0]} {word2[0]} {self.relations_translation(relation)}")
+        #                 words_info.append([word1, word2, self.relations_translation(relation)])
+        #                 print(f"{word1} {word2} {self.relations_translation(relation)}")
+        #                 review_flag += 1
+        #                 review_opinion += f"{word1[0]} {word2[0]} {self.relations_translation(relation)}\n"
+        # HanLP['tok/fine'].config.output_spans = False
+        #
+        # print("words_info:", words_info)
+        # b = time.time()
+        # print("wordlevel_point耗时：",b-a)
+        return review_flag, review_opinion, info_set
 
     def substitution_words(self, bu, triple, flag):
         substitution_words = []
@@ -94,7 +151,6 @@ class Comparator:
             substitution_words += another_name_e2 if another_name_e2 != [] else []
 
         return substitution_words
-
     # 惯用手段的直接置换
     def direct_substitution(self, review_flag, review_opinion, hownet, HanLP, parser, bu, triple_1, triple_2):
 
@@ -421,17 +477,21 @@ class Comparator:
         
         return review_flag, review_opinion
 
-def  highlight(HanLP, sentence):
+def  highlight(sentence):
+    sdp_feature = []
+    srl_feature = []
+    ner_feature = []
+
     doc = HanLP(sentence, tasks=['tok/fine', 'pos/pku', 'sdp', 'srl', 'ner'])
 
     # sdp 语义依存分析
-    sdp_feature = []
+    # sdp_feature = []
     for idx, relations in enumerate(doc['sdp']):
         for relation in relations:
             sdp_feature.append([doc['tok/fine'][idx], relation[1]]) if relation[1] == 'Tool' or relation[1] == 'Matl' else None
 
     # srl 语义角色标注
-    srl_feature = []
+    # srl_feature = []
     for idx, tuples in enumerate(doc['srl']):
         if idx==0 and len(doc['srl'])>1:
             continue
@@ -447,12 +507,12 @@ def  highlight(HanLP, sentence):
                         srl_feature.append(tuple[0])
 
     # 长度、时间、百分比等信息及其主体高亮显示
-    ner_feature = []
+    # ner_feature = []
     for ner in doc['ner/msra']:
         idx = doc['tok/fine'].index(ner[0])
         if idx!=-1:
             if idx-1>=0 and doc['pos/pku'][idx-1]=='n' and doc['tok/fine'][idx-1] not in ['权利要求']:
-                ner_feature.append([doc['tok/fine'][idx-1],ner])
+                ner_feature.append([doc['tok/fine'][idx-1], ner])
             elif idx+1<len(doc['tok/fine']) and doc['pos/pku'][idx+1]=='n' and doc['tok/fine'][idx+1] not in ['权利要求']:
                 ner_feature.append([doc['tok/fine'][idx+1], ner])
 
@@ -468,34 +528,74 @@ def  highlight(HanLP, sentence):
 
 # sdp_feature, srl_feature, ner_feature是直接从原句中得出的重点词
 # sdp_related_info, srl_related_info, ner_related_info是与重点词相关的词
-def search_related(HanLP, bu, sentence):
-    sdp_feature, srl_feature, ner_feature = highlight(HanLP, sentence)
+def search_related(sentence):
+    sdp_feature = []
+    srl_feature = []
+    ner_feature = []
+
+    sdp_feature, srl_feature, ner_feature = highlight(sentence)
     sdp_related_info = {}
     srl_related_info = {}
     ner_related_info = {}
     for i in sdp_feature:
-        sdp_related_info[i[0]] = bu.get_related(i[0])
+        if len(i[0]) <= 10:
+            related_info = bu.get_related(i[0])
+            if related_info != {}:
+                sdp_related_info[i[0]] = related_info
     for i in srl_feature:
-        srl_related_info[i] = bu.get_related(i)
+        if len(i) <= 10:
+            related_info = bu.get_related(i)
+            if related_info != {}:
+                srl_related_info[i] = related_info
     for i in ner_feature:
-        ner_related_info[i[0]] = bu.get_related(i[0])
+        if len(i[0]) <= 10:
+            related_info = bu.get_related(i[0])
+            if related_info != {}:
+                ner_related_info[i[0]] = related_info
 
-    print("sdp_related_info:", sdp_related_info) if sdp_related_info !={} else None
-    print("srl_related_info:", srl_related_info) if srl_related_info !={} else None
-    print("ner_related_info:", ner_related_info) if ner_related_info !={} else None
+    print("sdp_related_info:", sdp_related_info) if sdp_related_info != {} else None
+    print("srl_related_info:", srl_related_info) if srl_related_info != {} else None
+    print("ner_related_info:", ner_related_info) if ner_related_info != {} else None
 
     return sdp_feature, srl_feature, ner_feature, sdp_related_info, srl_related_info, ner_related_info
 
-def search_related_main():
-    bu = Babeluse(20)
+def get_related_words(related_info, word_2, info_set, word_pairs):
+    for word_1 in related_info:
+        for relation in related_info[word_1]:
+            if word_2 in related_info[word_1][relation]:
+                if [word_1, word_2] not in word_pairs:
+                    word_pairs.append([word_1, word_2])
+                    info_set.append([word_1, word_2, [relation]])
+                else:
+                    idx = word_pairs.index([word_1, word_2])
+                    if relation not in info_set[idx][2]:
+                        info_set[idx][2].append(relation)
+    return info_set, word_pairs
+def words_compare(sentence_1, sentence_2):
+    a = time.time()
+    info_set = []
+    word_pairs = []
+    sdp_feature, srl_feature, ner_feature, sdp_related_info, srl_related_info, ner_related_info = search_related(sentence_1)
+    words_2 = HanLP(sentence_2, tasks='tok/fine')['tok/fine']
+    for word_2 in words_2:
+        info_set, word_pairs = get_related_words(sdp_related_info, word_2, info_set, word_pairs)
+        info_set, word_pairs = get_related_words(srl_related_info, word_2, info_set, word_pairs)
+        info_set, word_pairs = get_related_words(ner_related_info, word_2, info_set, word_pairs)
 
-    # 输入
-    sovereign_content_1 = '3.铜30克，铝60g。'
-    sovereign_content_2 = '5.如权利要求2所述的TNT/DNAN基熔铸炸药，其特征在于，添加剂为N-甲基-4-硝基苯胺、三-（2-氯乙基）磷酸酯、邻苯二酚中任意一种。'
-
-    # 返回原句重点词及其相关词（用于检索）
-    search_related(HanLP, bu, sovereign_content_1)
-    search_related(HanLP, bu, sovereign_content_2)
+    info_set_copy = info_set.copy()
+    for idx, info in enumerate(info_set_copy):
+        start_1 = sentence_1.find(info[0])
+        start_2 = sentence_2.find(info[1])
+        if start_1 != -1 and start_2 != -1:
+            end_1 = start_1 + len(info[0])
+            end_2 = start_2 + len(info[1])
+            info_set[idx].insert(1, [start_1, end_1])
+            info_set[idx].insert(3, [start_2, end_2])
+        else:
+            info_set.remove(info)
+    b = time.time()
+    print("words_compare耗时:", b-a)
+    return info_set
 
 def novelty_compare(main_sig, com_sig):
 
@@ -507,7 +607,8 @@ def novelty_compare(main_sig, com_sig):
     patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
     comparator = Comparator()
     # 输出
-    review_opinion, words_info = comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list, patent_1_sovs_list, patent_2_sentences_list, patent_2_sovs_list)
+    review_opinion, words_info = comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
 
     # print(f'\nreview_opinion:\n{review_opinion}***\n')
+    return review_opinion, words_info
     return review_opinion, words_info

@@ -60,7 +60,7 @@ class TripleExtractor:
 
     def if_symbol_or_letter(self, keyword):
         symbol_number = 0
-        symbols = "~!@#$%^&amp;*()_+-*/&lt;&gt;,.[]\/'\""
+        symbols = "~!@#$%^&amp;、*()_+-*/&lt;&gt;,.[]\/'\""
         letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
         if keyword in symbols+letters:
             return True
@@ -164,11 +164,13 @@ class TripleExtractor:
                                         if triple != [] and triple not in svos:
                                             svos.append(triple) if self.reserve_triple(triple) else None
                                             # print("三元组--动词在最后:",triple)
-
+        # print("doc['ner/msra']:", doc['ner/msra'])
+        # print("doc['tok/fine']:", doc['tok/fine'])
         for ner in doc['ner/msra']:
             idx = doc['tok/fine'].index(ner[0])
             if idx != -1:
                 if idx - 1 >= 0 and doc['pos/pku'][idx - 1] == 'n' and doc['tok/fine'][idx - 1] not in ['权利要求']:
+                    # if ner[1] == 'PERCENT'
                     svos.append([doc['tok/fine'][idx-1],'为', ner[0]])
                 elif idx + 1 < len(doc['tok/fine']) and doc['pos/pku'][idx + 1] == 'n' and doc['tok/fine'][idx + 1] not in ['权利要求']:
                     svos.append([doc['tok/fine'][idx + 1], '为', ner[0]])
@@ -254,6 +256,12 @@ def content_process(content):
     content = re.sub(u"\\(.*?\\)", "", content) # 去除(21)等括号及括号内的内容
     content = re.sub(u" ", "", content) # 去除空格
     content = re.sub(u"℃", "摄氏度", content)  # 去除空格
+
+    # table = {ord(f): ord(t) for f, t in zip(
+    #     u'～~，。！？【】（）％＃＠＆１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
+    #     u'--,.!?[]()%#@&1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')}
+    # content = content.translate(table)
+
     # flag = content.index('.')
     # content = content[flag+1:]
     return content
@@ -266,10 +274,10 @@ def triple_extraction_main(HanLP, sovereign_content):
 
     sentences_list = []
     svos_list = []
-    content = re.sub(u" ", "", sovereign_content) # 去除空格
-    sentences_list.append(content)
+    # content = re.sub(u" ", "", sovereign_content) # 去除空格
+    sentences_list.append(sovereign_content)
 
-    content = content_process(content)
+    content = content_process(sovereign_content)
     svos_list = extractor.sovereigns_triples(HanLP, content)
 
     return sentences_list, svos_list, extractor

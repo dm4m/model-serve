@@ -3,12 +3,18 @@ import sys
 # sys.path.append('/data/bwj/project/model-serve/models')
 # sys.path.append('/data/bwj/project/model-serve/services')
 from novelty.compare import novelty_compare
-from services.search_service import search_by_patent
+# from services.search_service import search_by_patent
+from novelty.compare import words_compare
 
 def test_novelty_compare():
-    sovereign_content_1 = '根据权利要求1-4任一项所述的炸药，其特征在于，所述纳米玄武岩粉的粒径为10-100nm。'
+
+    sovereign_content_1 = '一种含某型硝酸铵的粘性炸药,其特征在于：所述粘性炸药由下述重量百分比的原料组成：多孔粒状硝酸铵50～75％,某型硝酸铵10～33％,粘结剂3～11％,轻柴油1.5～4.5％,敏化剂4～5％；所述粘结剂由下述重量份的原料组成：某型硝酸铵30～60份,聚丙烯酰胺5～6份,水30～35份；所述含某型硝酸铵的粘性炸药的制备方法包括以下步骤：(1)制备粘结剂：取30～60重量份的某型硝酸铵和5～6重量份的聚丙烯酰胺粉末溶于30～35重量份的水中混合均匀,温度控制在30～80℃；(2)制备粘性炸药：先取重量百分比为50～75％的多孔粒状/硝酸铵某型硝酸铵10～33％和1.5～4.5％的轻柴油加入混拌机中,混拌均匀；然后取重量百分比4～5％的敏化剂加入混拌机中,混拌均匀；最后取重量百分比3～11％的步骤(1)中的粘结剂,加入混拌机中,混拌均匀,形成粘性炸药。'
     sovereign_content_2 = '根据权利要求1-4任一项所述的炸药，其特征在于，所述纳米玄武岩粉的粒径为10-100nm。'
-    print(novelty_compare(sovereign_content_2, sovereign_content_1))
+
+    review_opinion, words_info = novelty_compare(sovereign_content_2, sovereign_content_1)
+    print(f"\nwords_info:\n{words_info}")
+    print(f"\nreview_opinion:\n{review_opinion}")
+
 
 def test_search_by_patent():
     patent_id_1 = 9531
@@ -32,6 +38,6 @@ if __name__ == '__main__':
     # test_get_sig_by_id()
     #  models.init_app()
     # test_signory_item_analysis()
-    # test_novelty_compare()
-    test_search_by_patent()
+    test_novelty_compare()
+    # test_search_by_patent()
     # test_mysql()
