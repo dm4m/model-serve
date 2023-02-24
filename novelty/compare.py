@@ -18,10 +18,16 @@ class Comparator:
     def __init__(self) -> None:
         pass
 
-    def sovereign_compare(self, extractor, hownet, parser, HanLP, bu, sovereign_sentence_1, sovereign_triples_1, sovereign_sentence_2, sovereign_triples_2):
+    def sovereign_compare(self, extractor, sovereign_sentence_1, sovereign_triples_1, sovereign_sentence_2, sovereign_triples_2):
 
-        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
-        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
+        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+
+        x = time.time()
+        sovereign_triples_1_substitution_words, triples_copy_1 = self.substitution_words_for_direct_substitution(sovereign_triples_1)
+        sovereign_triples_2_substitution_words, triples_copy_2 = self.substitution_words_for_direct_substitution(sovereign_triples_2)
+        y = time.time()
+        print("获得置换词时间：", y - x)
 
         review_flag = 0
         review_opinion = ''
@@ -29,14 +35,26 @@ class Comparator:
         # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
 
         # 词比较
-        review_flag, review_opinion, words_info = self.wordlevel_point(review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2)
+        # a = time.time()
+        review_flag, review_opinion, words_info = self.wordlevel_point(review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2)
+        # b = time.time()
+        # print("词比较时间：", b-a)
 
         # 三元组比较
         for i in range(len(sovereign_triples_1)):
             for j in range(len(sovereign_triples_2)):
-                review_flag, review_opinion = self.direct_substitution(review_flag, review_opinion, hownet, HanLP, parser, bu, sovereign_triples_1[i], sovereign_triples_2[j])
-                review_flag, review_opinion = self.hyponym_hypernym_compare(review_flag, review_opinion, hownet, parser, HanLP, bu, sovereign_triples_1[i], sovereign_triples_2[j])
-                review_flag, review_opinion = self.numeric_range_compare(review_flag, review_opinion, extractor, hownet, parser, HanLP, bu, sovereign_triples_1[i], sovereign_triples_2[j])
+                # print(f"\n本轮三元组：{sovereign_triples_1[i], sovereign_triples_2[j]}")
+                # a = time.time()
+                review_flag, review_opinion = self.direct_substitution(review_flag, review_opinion, sovereign_triples_1[i], sovereign_triples_2[j], triples_copy_1[i], triples_copy_2[j], sovereign_triples_1_substitution_words[i], sovereign_triples_2_substitution_words[j])
+                # b = time.time()
+                # print("惯用手段的直接置换时间：", b-a)
+                review_flag, review_opinion = self.hyponym_hypernym_compare(review_flag, review_opinion, sovereign_triples_1[i], sovereign_triples_2[j])
+                # c = time.time()
+                # print("上下位比较时间：", c-b)
+                review_flag, review_opinion = self.numeric_range_compare(review_flag, review_opinion, extractor, sovereign_triples_1[i], sovereign_triples_2[j])
+                # d = time.time()
+                # print("数值范围比较时间：", d - c)
+                # print(f"本轮总时间：{d-a}")
 
         if review_flag == 0:
             print('暂未触发相关规则。')
@@ -52,7 +70,7 @@ class Comparator:
 
 
     # 两句主权项对比word-level高亮显示
-    def wordlevel_point(self, review_flag, review_opinion, hownet, HanLP, sovereign_sentence_1, sovereign_sentence_2):
+    def wordlevel_point(self, review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2):
         # a = time.time()
 
         sdp_feature_1, srl_feature_1, ner_feature_1 = highlight(sovereign_sentence_1)
@@ -135,6 +153,22 @@ class Comparator:
         # print("wordlevel_point耗时：",b-a)
         return review_flag, review_opinion, info_set
 
+    # 得到惯用手段的直接置换的substitution_words
+    def substitution_words_for_direct_substitution(self, sovereign_triples):
+        sovereign_triples_substitution_words = []
+        triples_copy = sovereign_triples.copy()
+        for idx, triple in enumerate(sovereign_triples):
+
+            for i in [0, 2]:
+                words, postags = parser.words_postags(HanLP, triple[i])
+                triples_copy[idx][i] = ''
+                for j in range(len(words)):
+                    if postags[j] != 'p':  # 删除介词
+                        triples_copy[idx][i] += words[j]
+
+            sovereign_triples_substitution_words.append(self.substitution_words(bu, triples_copy[idx], 1))
+        return sovereign_triples_substitution_words, triples_copy
+
     def substitution_words(self, bu, triple, flag):
         substitution_words = []
         related_e1 = bu.get_related(triple[0])
@@ -152,27 +186,30 @@ class Comparator:
 
         return substitution_words
     # 惯用手段的直接置换
-    def direct_substitution(self, review_flag, review_opinion, hownet, HanLP, parser, bu, triple_1, triple_2):
+    def direct_substitution(self, review_flag, review_opinion, triple_1, triple_2, triple_copy_1, triple_copy_2, substitution_words_1, substitution_words_2):
 
-        triple_copy_1 = triple_1.copy()
-        triple_copy_2 = triple_2.copy()
+        # triple_copy_1 = triple_1.copy()
+        # triple_copy_2 = triple_2.copy()
+        #
+        # for i in [0, 2]:
+        #     words, postags = parser.words_postags(HanLP, triple_copy_1[i])
+        #     triple_copy_1[i] = ''
+        #     for j in range(len(words)):
+        #         if postags[j] != 'p': # 删除介词
+        #             triple_copy_1[i] += words[j]
+        # for i in [0, 2]:
+        #     words, postags = parser.words_postags(HanLP, triple_copy_2[i])
+        #     triple_copy_2[i] = ''
+        #     for j in range(len(words)):
+        #         if postags[j] != 'p':  # 删除介词
+        #             triple_copy_2[i] += words[j]
+        # # print(triple_copy_1, triple_copy_2)
+        # substitution_words_1 = self.substitution_words(bu, triple_copy_1, 1)
+        # substitution_words_2 = self.substitution_words(bu, triple_copy_2, 1)
+        # # print(substitution_words_1, substitution_words_2)
 
-        for i in [0, 2]:
-            words, postags = parser.words_postags(HanLP, triple_copy_1[i])
-            triple_copy_1[i] = ''
-            for j in range(len(words)):
-                if postags[j] != 'p': # 删除介词
-                    triple_copy_1[i] += words[j]
-        for i in [0, 2]:
-            words, postags = parser.words_postags(HanLP, triple_copy_2[i])
-            triple_copy_2[i] = ''
-            for j in range(len(words)):
-                if postags[j] != 'p':  # 删除介词
-                    triple_copy_2[i] += words[j]
-        # print(triple_copy_1, triple_copy_2)
-        substitution_words_1 = self.substitution_words(bu, triple_copy_1, 1)
-        substitution_words_2 = self.substitution_words(bu, triple_copy_2, 1)
-        # print(substitution_words_1, substitution_words_2)
+        # substitution_words_1 = sovereign_triples_1_substitution_words[triple_copy_1]
+        # substitution_words_2 = sovereign_triples_2_substitution_words[triple_copy_2]
 
         # threshold = 0.4
         # if difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[0]).quick_ratio()>=threshold:
@@ -184,7 +221,7 @@ class Comparator:
         return review_flag, review_opinion
 
     # 具体(下位) 概念与一般(上位) 概念
-    def hyponym_hypernym_compare(self, review_flag, review_opinion, hownet, parser, HanLP, bu, triple_1, triple_2):
+    def hyponym_hypernym_compare(self, review_flag, review_opinion, triple_1, triple_2):
 
         triple_copy_1 = triple_1.copy()
         triple_copy_2 = triple_2.copy()
@@ -224,69 +261,69 @@ class Comparator:
                 review_flag += 1
                 review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性\n"
 
-        if review_flag == review_flag_temp:
-            # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
-            # t1_e2_hypernym = bu.hypernym(triple_copy_1[2])
-            # t1_e1_hyponymy = bu.hyponymy(triple_copy_1[0]) # 下位词
-            # t1_e2_hyponymy = bu.hyponymy(triple_copy_1[2])
-            t2_e1_hypernym = bu.hypernym(triple_copy_2[0]) # 上位词
-            t2_e2_hypernym = bu.hypernym(triple_copy_2[2])
-            t2_e1_hyponymy = bu.hyponymy(triple_copy_2[0]) # 下位词
-            t2_e2_hyponymy = bu.hyponymy(triple_copy_2[2])
-
-            if triple_copy_1[0] != triple_copy_2[0]:
-                # if triple_copy_1[0] in t2_e1_hypernym or triple_copy_2[0] in t1_e1_hyponymy: # 上位-下位
-                if triple_copy_1[0] in t2_e1_hypernym:  # 上位-下位
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
-                # if triple_copy_1[0] in t2_e1_hyponymy or triple_copy_2[0] in t1_e1_hypernym: # 下位-上位
-                if triple_copy_1[0] in t2_e1_hyponymy:  # 下位-上位
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
-
-            if triple_copy_1[0] != triple_copy_2[2]:
-                # if triple_copy_1[0] in t2_e2_hypernym or triple_copy_2[2] in t1_e1_hyponymy: # 上-下
-                if triple_copy_1[0] in t2_e2_hypernym:  # 上-下
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
-                # if triple_copy_1[0] in t2_e2_hyponymy or triple_copy_2[2] in t1_e1_hypernym: # 下-上
-                if triple_copy_1[0] in t2_e2_hyponymy:  # 下-上
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
-
-            if triple_copy_1[2] != triple_copy_2[0]:
-                # if triple_copy_1[2] in t2_e1_hypernym or triple_copy_2[0] in t1_e2_hyponymy: # 上-下
-                if triple_copy_1[2] in t2_e1_hypernym:  # 上-下
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
-                # if triple_copy_1[2] in t2_e1_hyponymy or triple_copy_2[0] in t1_e2_hypernym: # 下-上
-                if triple_copy_1[2] in t2_e1_hyponymy:  # 下-上
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
-
-            if triple_copy_1[2] != triple_copy_2[2]:
-                # if triple_copy_1[2] in t2_e2_hypernym or triple_copy_2[2] in t1_e2_hyponymy: # 上-下
-                if triple_copy_1[2] in t2_e2_hypernym:  # 上-下
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
-                # if triple_copy_1[2] in t2_e2_hyponymy or triple_copy_2[2] in t1_e2_hypernym: # 下-上
-                if triple_copy_1[2] in t2_e2_hyponymy:  # 下-上
-                    print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
-                    review_flag += 1
-                    review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
+        # if review_flag == review_flag_temp:
+        #     # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
+        #     # t1_e2_hypernym = bu.hypernym(triple_copy_1[2])
+        #     # t1_e1_hyponymy = bu.hyponymy(triple_copy_1[0]) # 下位词
+        #     # t1_e2_hyponymy = bu.hyponymy(triple_copy_1[2])
+        #     t2_e1_hypernym = bu.hypernym(triple_copy_2[0]) # 上位词
+        #     t2_e2_hypernym = bu.hypernym(triple_copy_2[2])
+        #     t2_e1_hyponymy = bu.hyponymy(triple_copy_2[0]) # 下位词
+        #     t2_e2_hyponymy = bu.hyponymy(triple_copy_2[2])
+        #
+        #     if triple_copy_1[0] != triple_copy_2[0]:
+        #         # if triple_copy_1[0] in t2_e1_hypernym or triple_copy_2[0] in t1_e1_hyponymy: # 上位-下位
+        #         if triple_copy_1[0] in t2_e1_hypernym:  # 上位-下位
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
+        #         # if triple_copy_1[0] in t2_e1_hyponymy or triple_copy_2[0] in t1_e1_hypernym: # 下位-上位
+        #         if triple_copy_1[0] in t2_e1_hyponymy:  # 下位-上位
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
+        #
+        #     if triple_copy_1[0] != triple_copy_2[2]:
+        #         # if triple_copy_1[0] in t2_e2_hypernym or triple_copy_2[2] in t1_e1_hyponymy: # 上-下
+        #         if triple_copy_1[0] in t2_e2_hypernym:  # 上-下
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
+        #         # if triple_copy_1[0] in t2_e2_hyponymy or triple_copy_2[2] in t1_e1_hypernym: # 下-上
+        #         if triple_copy_1[0] in t2_e2_hyponymy:  # 下-上
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[0]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
+        #
+        #     if triple_copy_1[2] != triple_copy_2[0]:
+        #         # if triple_copy_1[2] in t2_e1_hypernym or triple_copy_2[0] in t1_e2_hyponymy: # 上-下
+        #         if triple_copy_1[2] in t2_e1_hypernym:  # 上-下
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为上位-下位概念，不影响新颖性\n"
+        #         # if triple_copy_1[2] in t2_e1_hyponymy or triple_copy_2[0] in t1_e2_hypernym: # 下-上
+        #         if triple_copy_1[2] in t2_e1_hyponymy:  # 下-上
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[0]}为下位-上位概念，不影响新颖性\n"
+        #
+        #     if triple_copy_1[2] != triple_copy_2[2]:
+        #         # if triple_copy_1[2] in t2_e2_hypernym or triple_copy_2[2] in t1_e2_hyponymy: # 上-下
+        #         if triple_copy_1[2] in t2_e2_hypernym:  # 上-下
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为上位-下位概念，不影响新颖性\n"
+        #         # if triple_copy_1[2] in t2_e2_hyponymy or triple_copy_2[2] in t1_e2_hypernym: # 下-上
+        #         if triple_copy_1[2] in t2_e2_hyponymy:  # 下-上
+        #             print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性")
+        #             review_flag += 1
+        #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
 
 
         return review_flag, review_opinion
     
     # 数值与数值范围
-    def numeric_range_compare(self, review_flag, review_opinion, extractor, hownet, parser, HanLP, bu, triple_1, triple_2):
+    def numeric_range_compare(self, review_flag, review_opinion, extractor, triple_1, triple_2):
 
         words_triple_1_e2, postags_triple_1_e2 = parser.words_postags(HanLP, triple_1[2])
         words_triple_2_e2, postags_triple_2_e2 = parser.words_postags(HanLP, triple_2[2])
@@ -603,11 +640,17 @@ def novelty_compare(main_sig, com_sig):
     # print(doc)
 
     # review_opinion = ''
+    a = time.time()
     patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
     patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
+    b = time.time()
+    print("抽取三元组时间：", b-a)
     comparator = Comparator()
     # 输出
-    review_opinion, words_info = comparator.sovereign_compare(extractor, hownet, parser, HanLP, bu, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
+    c = time.time()
+    review_opinion, words_info = comparator.sovereign_compare(extractor, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
+    d = time.time()
+    print("比较时间：", d - c)
 
     # print(f'\nreview_opinion:\n{review_opinion}***\n')
     return review_opinion, words_info
