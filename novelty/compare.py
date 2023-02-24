@@ -319,7 +319,6 @@ class Comparator:
         #             review_flag += 1
         #             review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{triple_copy_1[2]}、{triple_copy_2[2]}为下位-上位概念，不影响新颖性\n"
 
-
         return review_flag, review_opinion
     
     # 数值与数值范围
