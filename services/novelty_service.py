@@ -51,9 +51,15 @@ def signory_analysis(signory_items):
 
 def signory_item_analysis(signory_item):
     # 1.recall relevant signory items 2. extract and compare
-    relevant_signory_ids = get_relevant_id_list("signory", "signory", signory_item, limit=10)
+    relevant_signory_ids = get_relevant_id_list("signory", "signory", signory_item, limit=1)
     relevant_signorys = get_sig_by_id(relevant_signory_ids)
     ans_result = []
     for sig in relevant_signorys:
-        ans_result.append([sig, novelty_compare(signory_item, sig["signory_seg"])])
+        print("比较：" + sig["signory_seg"])
+        tmp = {}
+        tmp['relevant_sig_id'] = sig['signory_id']
+        tmp['relevant_sig'] = sig["signory_seg"]
+        tmp['ori_patent_title'] = sig["title"]
+        tmp['compare_result'] = novelty_compare(signory_item, sig["signory_seg"])
+        ans_result.append(tmp)
     return ans_result

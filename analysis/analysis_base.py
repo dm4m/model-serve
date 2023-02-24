@@ -44,7 +44,6 @@ class cladata:#基类
 
 class authoranaly(cladata):#申请人分析
 
-
     def authorpie(self,dic,title):#绘制饼状图
         plt.figure(figsize = (15,15))
         plt.rcParams['font.family'] = 'SimHei'

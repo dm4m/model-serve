@@ -7,7 +7,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/models/roformer_chinese_sim_char_ft_base" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 3.8.0 (sftp://bwj@10.1.0.177:22/data/bwj/develop/enviroments/anaconda3/envs/patent2vec/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.8.0 (sftp://sjz@10.108.119.71:22/data/sjz/yes/envs/env_3840/bin/python3.8) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
