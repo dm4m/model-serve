@@ -49,7 +49,7 @@ def aggregate(id_score_list):
                     except:
                         continue
                 last_embed.append({"embedding":embedding,"doc_id":now_doc_id})
-    return last_embed[0:120]
+    return last_embed
 
 def rerank(query_vec,last_embed):
     # 输入：聚合后查询向量、文档向量
