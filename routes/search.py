@@ -16,6 +16,8 @@ def neural_search():
         return 'no query'
     res = patent_neural_search(field, query)
     return res
+
+
 @search_bp.route("/uploadSearch", methods=['GET', 'POST', 'OPTIONS'])
 def upload_search():
     if request.method == 'POST':
@@ -27,7 +29,10 @@ def upload_search():
             pdf_bytes = file.read()
             pdf = pdfplumber.open(io.BytesIO(pdf_bytes))
             signory_list = get_signory_list_by_pdf_file(pdf)
-            response = search_by_patent(signory_list)
-            return response
+            res_list = search_by_patent(signory_list)
+            response = {}
+            response['signory_list'] = signory_list
+            response['res_list'] = res_list
+            return jsonify(response)
     else:
         return 'file uploaded false'
