@@ -61,4 +61,4 @@ def rerank(query_vec,last_embed):
         doc_score[docs["doc_id"]] = sum(mul_res)
     order = sorted(doc_score.items(),key=lambda d:d[1], reverse=True)
     order_list = [i[0] for i in order]
-    return order_list
+    return order_list[0:100]

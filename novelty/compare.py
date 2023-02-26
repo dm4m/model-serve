@@ -216,7 +216,7 @@ class Comparator:
         if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
             print(f"可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性")
             review_flag += 1
-            review_opinion += f"可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性\n"
+            review_opinion += f"\n可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性\n"
 
         return review_flag, review_opinion
 
@@ -255,11 +255,11 @@ class Comparator:
             if 'hyponym' in relation_list[i][2]:
                 print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性")
                 review_flag += 1
-                review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性\n"
+                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性\n"
             if 'hypernym' in relation_list[i][2]:
                 print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性")
                 review_flag += 1
-                review_opinion += f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性\n"
+                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性\n"
 
         # if review_flag == review_flag_temp:
         #     # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
@@ -328,12 +328,17 @@ class Comparator:
         words_triple_2_e2, postags_triple_2_e2 = parser.words_postags(HanLP, triple_2[2])
 
 
-        if difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio() >= 0.5 and difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio() >= 0.5 and 'm' in postags_triple_1_e2 and 'm' in postags_triple_2_e2 and words_triple_1_e2.count('-')<2 and words_triple_2_e2.count('-')<2: # 若两个三元组的e1、r相似，且e2中均有数词，则进行数值与数值范围比较
+        if difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio() >= 0.5 and difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio() >= 0.5 and self.is_digital(words_triple_1_e2, postags_triple_1_e2) and self.is_digital(words_triple_2_e2, postags_triple_2_e2) and words_triple_1_e2.count('-')<2 and words_triple_2_e2.count('-')<2: # 若两个三元组的e1、r相似，且e2中均有数词，则进行数值与数值范围比较
 
             if 'n' not in postags_triple_1_e2 and 'n' not in postags_triple_2_e2:
                 number_range_list_without_n_1 = self.e2_number_range_without_n(parser, HanLP, triple_1[2])
                 number_range_list_without_n_2 = self.e2_number_range_without_n(parser, HanLP, triple_2[2])
-                review_flag, review_opinion = self.number_range_rules(review_flag, review_opinion, hownet, number_range_list_without_n_1, number_range_list_without_n_2)
+                tmp_review_opinion = review_opinion
+                tmp_review_flag = review_flag
+                tmp_review_flag, tmp_review_opinion = self.number_range_rules(tmp_review_flag, tmp_review_opinion, hownet, number_range_list_without_n_1, number_range_list_without_n_2)
+                if tmp_review_flag > review_flag:
+                    review_flag = tmp_review_flag
+                    review_opinion = review_opinion + f"\n涉及数值和数值范围的比较：对比专利{triple_1}，待申请专利{triple_2}\n" + tmp_review_opinion.replace(review_opinion, '')
             if 'n' in postags_triple_1_e2 and 'n' in postags_triple_2_e2:
                 number_range_list_with_n_1 = self.e2_with_n_reprocess(parser, HanLP, words_triple_1_e2, postags_triple_1_e2)
                 number_range_list_with_n_2 = self.e2_with_n_reprocess(parser, HanLP, words_triple_2_e2, postags_triple_2_e2)
@@ -342,11 +347,17 @@ class Comparator:
                         if difflib.SequenceMatcher(None, i, j).quick_ratio() >= 0.5 or i in j or j in i:
                             print(f"涉及数值和数值范围的比较：对比专利{{{i}:{number_range_list_with_n_1[i]}}}，待申请专利{{{j}:{number_range_list_with_n_2[j]}}}")
                             review_flag += 1
-                            review_opinion += f"涉及数值和数值范围的比较：对比专利{{{i}:{number_range_list_with_n_1[i]}}}，待申请专利{{{j}:{number_range_list_with_n_2[j]}}}\n"
+                            review_opinion += f"\n涉及数值和数值范围的比较：对比专利{{{i}:{number_range_list_with_n_1[i]}}}，待申请专利{{{j}:{number_range_list_with_n_2[j]}}}\n"
                             review_flag, review_opinion = self.number_range_rules(review_flag, review_opinion, hownet, number_range_list_with_n_1[i], number_range_list_with_n_2[j])
 
         return review_flag, review_opinion
-    
+
+    def is_digital(self, words, postags):
+        for idx, postag in enumerate(postags):
+            if postag == 'm' and re.findall(r'\d+', words[idx]) != []:
+                return True
+        return False
+
     # ['一种铜基形状记忆合金', '包含', '20％锌和5％铝']中的'20％锌和5％铝'再拆分
     def e2_with_n_reprocess(self, parser, HanLP, words_triple_e2, postags_triple_e2):
         # print(f"words_triple_e2:{words_triple_e2}\npostags_triple_e2:{postags_triple_e2}")
@@ -354,7 +365,8 @@ class Comparator:
         i = 0
         number_range_list_with_n = {}
         while(i<=len(words_triple_e2)-1):
-            if 'm' in postags_triple_e2[i:] and 'n' in postags_triple_e2[i:]:
+            # if 'm' in postags_triple_e2[i:] and 'n' in postags_triple_e2[i:]:
+            if self.is_digital(words_triple_e2[i:], postags_triple_e2[i:]) and 'n' in postags_triple_e2[i:]:
                 m_id = postags_triple_e2.index('m', i)
                 n_id = postags_triple_e2.index('n', i)
                 if m_id < n_id:
@@ -505,11 +517,17 @@ class Comparator:
                         review_flag += 1
                         review_opinion += f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性\n"
 
-                    # 5？
-                    if (number_range_list_1[i][0] <= number_range_list_1[i][1]) and (number_range_list_2[j][0] <= number_range_list_2[j][1]) and ((number_range_list_1[i][0] > number_range_list_2[j][1]) or (number_range_list_1[i][1] < number_range_list_2[j][0])):
-                        print(f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性")
+                    # 5
+                    if (number_range_list_1[i][0] == number_range_list_2[j][0]) and (number_range_list_1[i][1] == number_range_list_2[j][1]):
+                        print(f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性")
                         review_flag += 1
-                        review_opinion += f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性\n"
+
+                    # 6
+                    if (number_range_list_1[i][0] <= number_range_list_1[i][1]) and (number_range_list_2[j][0] <= number_range_list_2[j][1]) and ((number_range_list_1[i][0] > number_range_list_2[j][1]) or (number_range_list_1[i][1] < number_range_list_2[j][0])):
+                        print(f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性")
+                        review_flag += 1
+                        review_opinion += f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性\n"
         
         return review_flag, review_opinion
 

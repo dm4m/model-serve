@@ -1,12 +1,11 @@
 import pymysql
 import os
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import MaxNLocator
-import matplotlib
-import io
-import base64
 import scipy.stats as st
+from pyecharts import options as opts
+from pyecharts.charts import Line,Grid,Bar,Pie
+from pyecharts.faker import Faker
+from pyecharts.globals import ThemeType
 
 class mydb:#数据库操作类
 
@@ -45,13 +44,9 @@ class cladata:#基类
 class authoranaly(cladata):#申请人分析
 
     def authorpie(self,dic,title):#绘制饼状图
-        plt.figure(figsize = (15,15))
-        plt.rcParams['font.family'] = 'SimHei'
-        plt.rcParams['axes.unicode_minus']=False
-        x = dic.values()
-        plt.subplot(335)
-        plt.title(title)
+        c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
         mydic={}
+        result=[]
         n=0
         for key,value in dic.items():
             n+=1
@@ -59,26 +54,16 @@ class authoranaly(cladata):#申请人分析
                 mydic[key]=value
             else:
                 break
-        x=mydic.values()
-        plt.pie(x,labels=mydic.keys(),labeldistance=1.2,autopct='%1.2f%%',shadow=True,startangle=90,radius=4,pctdistance=1.1)
-        plt.legend()
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output
+        for key,value in mydic.items():
+            result.append([key,value])
+        c.add("",result) 
+        c.set_global_opts(title_opts=opts.TitleOpts(title="申请人分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+        return c.dump_options_with_quotes()
 
 
     def authorbar(self,dic):#绘制柱状图
-        plt.figure(figsize=(8,8),frameon=False)
-        plt.title(self.title)
-        plt.xlabel('发明人')
-        plt.ylabel('数量')
-        plt.xticks(fontsize=5)
-        plt.grid()
-        plt.rcParams['font.sans-serif'] = ['Kaitt', 'SimHei']
+        c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
         X, Y = [], []
         n=0
         for key,value in dic.items():
@@ -88,14 +73,10 @@ class authoranaly(cladata):#申请人分析
                 Y.append(int(value))
             else:
                 break
-        plt.bar(X , Y)                 
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output
+        c.add_xaxis(X)  
+        c.add_yaxis(series_name="申请人", y_axis=Y) 
+        c.set_global_opts(title_opts=opts.TitleOpts(title="申请人分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))       
+        return c.dump_options_with_quotes()
         
     def authorlist(self):#将数据中所有作者解析
         dic={}
@@ -140,42 +121,25 @@ class areaanaly(cladata):#地域分析
         return dic
 
     def areabar(self,dic):#绘制柱状图
-        plt.title(self.title)
-        plt.xlabel('地区')
-        plt.ylabel('数量')
-        plt.xticks(fontsize=5)
-        plt.grid()
-        plt.rcParams['font.sans-serif'] = ['Kaitt', 'SimHei']
+        c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
         X, Y = [], []
-        n=0
         for key,value in dic.items():
                 X.append(key)
                 Y.append(int(value))
-        plt.bar(X , Y)             
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read()) 
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output    
+        c.add_xaxis(X)  
+        c.add_yaxis(series_name="地区", y_axis=Y) 
+        c.set_global_opts(title_opts=opts.TitleOpts(title="地域分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))   
+        return c.dump_options_with_quotes()   
 
     def areapie(self,dic):#绘制饼状图
-        plt.rcParams['font.family'] = 'SimHei'
-        plt.rcParams['axes.unicode_minus']=False
-        x = dic.values()
-        plt.subplot(335)
-        plt.title(self.title)
-        plt.pie(x,labels=dic.keys(),labeldistance=1.2,autopct='%10.1f%%',shadow=True,startangle=90,radius=4,pctdistance=0.7)
-        plt.legend()
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
-        print(my_base64_jpgData)
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output  
+        c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+        result=[]
+        for key,value in dic.items():
+            result.append([key,value])
+        c.add("",result) 
+        c.set_global_opts(title_opts=opts.TitleOpts(title="地域分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))           
+        return c.dump_options_with_quotes()
 
 
 class trendanaly(cladata):#趋势分析
@@ -206,80 +170,56 @@ class trendanaly(cladata):#趋势分析
             
 
     def pietrend(self,dic,title):#绘制饼状图
-        plt.rcParams['font.family'] = 'SimHei'
-        plt.rcParams['axes.unicode_minus']=False
-        x = dic.values()
-        plt.subplot(335)
-        plt.title(title)
-        plt.pie(x,labels=dic.keys(),labeldistance=1.2,autopct='%10.1f%%',shadow=True,startangle=90,radius=4,pctdistance=0.7)
-        plt.legend()
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output
+        c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+        result=[]
+
+        for key,value in dic.items():
+            if value != 0:
+                result.append([str(key)+"年",value,]) 
+        c.add("",result) 
+        c.set_global_opts(title_opts=opts.TitleOpts(title="趋势分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))             
+        return c.dump_options_with_quotes()
                 
     def trendline(self,dic,stime,etime):#绘制折线图
-        plt.figure(2)
-        n=0
-        plt.title(self.title)
-        plt.xlabel('年份')
-        plt.ylabel('数量')
-        plt.rcParams['font.sans-serif'] = ['Kaitt', 'SimHei']
-        plt.grid()
-        for i in dic.keys():
-            n+=1     
-        for upkey,upvalue in dic.items():
-            X, Y = [], []
-            plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-            for value in upvalue.values():
-                Y.append(float(value))
-            X=np.arange(stime,etime+1)   
-            plt.plot(X , Y,label=upkey,marker='o')           
-        plt.legend()
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())           
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output
+        mytimelist=[]
+        mytime=stime
+        while mytime<=etime:
+            mytimelist.append(str(mytime)+"年")
+            mytime+=1
+        c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
+        c.add_xaxis(mytimelist)
+        for key,value in dic.items():
+            Y=[]
+            for upvalue in value.values():
+                Y.append(upvalue)
+            c.add_yaxis( series_name=key,y_axis=Y, is_connect_nones=True)
+            print(Y)
+        c.set_global_opts(title_opts=opts.TitleOpts(title=str(stime)+"年至"+str(etime)+"年趋势分析折线图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        return c.dump_options_with_quotes()
 
                 
     def trendbar(self,dic,stime,etime):#绘制时间趋势柱状图     
-        wid=0
-        n=0
-        plt.figure(1)
-        plt.title(self.title)
-        plt.xlabel('年份')
-        plt.ylabel('数量')
-        plt.grid()
-        for i in dic.keys():
-            n+=1
-        plt.rcParams['font.sans-serif'] = ['Kaitt', 'SimHei']
-        for upkey,upvalue in dic.items():
-            X, Y = [], []
-            plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
+        c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+        mytimelist=[]
+        mytime=stime
+        while mytime<=etime:
+            mytimelist.append(str(mytime)+"年")
+            mytime+=1
+        c.add_xaxis(mytimelist)    
+        mydic={}
+        for key,value in dic.items():
+            for uvalue in value.values():
+                if uvalue !=0:
+                    mydic[key]=value
+                    break
+        for upkey,upvalue in mydic.items():
+            Y = []
             for value in upvalue.values():
-                Y.append(float(value))
-            X=np.arange(stime,etime+1)
-            total_width = 0.8
-            width = total_width / n
-            X = X - (total_width - width) / 2      
-            plt.bar(X + wid*width, Y,width=width,label=upkey)           
-            for i, j in zip(X + wid*width, Y):
-                plt.text(i, j + 0.01, "%.2f" % j, ha="center", va="bottom", fontsize=7)
-            wid+=1
-        plt.legend()          
-        my_stringIObytes = io.BytesIO()
-        plt.savefig(my_stringIObytes, format='jpg',dpi=800)
-        plt.close()
-        my_stringIObytes.seek(0,0)
-        my_base64_jpgData = base64.b64encode(my_stringIObytes.read())          
-        output=str(my_base64_jpgData,encoding='utf-8')           
-        return output
+                Y.append(int(value)) 
+            c.add_yaxis( series_name=upkey,y_axis=Y)
+        c.set_global_opts(title_opts=opts.TitleOpts(title=str(stime)+"年至"+str(etime)+"年趋势分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))             
+        return c.dump_options_with_quotes()
 
     
 def myinput(list): #将系统的输入转换成sql语句中所要的格式
@@ -387,6 +327,7 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     if anaType == 'area':
         return area(patentIds,figType)
     return trend(patentIds,figType)
+
 
 
 
