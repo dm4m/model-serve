@@ -57,7 +57,7 @@ class authoranaly(cladata):#申请人分析
         for key,value in mydic.items():
             result.append([key,value])
         c.add("",result) 
-        c.set_global_opts(title_opts=opts.TitleOpts(title="申请人分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        c.set_global_opts(title_opts=opts.TitleOpts(title="专利数量前20位申请人分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
         c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
         return c.dump_options_with_quotes()
 
@@ -75,7 +75,7 @@ class authoranaly(cladata):#申请人分析
                 break
         c.add_xaxis(X)  
         c.add_yaxis(series_name="申请人", y_axis=Y) 
-        c.set_global_opts(title_opts=opts.TitleOpts(title="申请人分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))       
+        c.set_global_opts(title_opts=opts.TitleOpts(title="专利数量前20位申请人分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))       
         return c.dump_options_with_quotes()
         
     def authorlist(self):#将数据中所有作者解析
@@ -177,7 +177,7 @@ class trendanaly(cladata):#趋势分析
             if value != 0:
                 result.append([str(key)+"年",value,]) 
         c.add("",result) 
-        c.set_global_opts(title_opts=opts.TitleOpts(title="趋势分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+        c.set_global_opts(title_opts=opts.TitleOpts(title="分类号"+str(title)+"趋势分析饼状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
         c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))             
         return c.dump_options_with_quotes()
                 
