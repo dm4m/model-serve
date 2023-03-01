@@ -8,7 +8,6 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
     pt_inputs = tokenizer(query, return_tensors="pt", max_length=510, truncation=True).to(device)
     pt_outputs = model(**pt_inputs)
     query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
-    print("query vector:" + str(query_embeddings))
     search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
     # 以下查询参数均为HNSW准备，ef取值为top k到3w多
     search_params_HNSW = {"ef":128}

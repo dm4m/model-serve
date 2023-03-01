@@ -11,3 +11,5 @@ def patent_analysis():
         figType = data.get('figType')
         patentIds = data.get('patentIds')
         return jsonify(analyze_by_list(patentIds, figType, anaType))
+    else:
+        return "success"

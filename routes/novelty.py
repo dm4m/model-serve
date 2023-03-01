@@ -30,3 +30,15 @@ def signory_analysis():
     signory = args.get('signory')
     response = signory_item_analysis(signory)
     return jsonify(response)
+
+
+@novelty_bp.route('/noveltyCompare', methods=['GET', 'POST', 'OPTIONS'])
+def novelty_compare():
+    if request.method == 'POST':
+        data = request.json
+        oriSig = data.get('oriSig')
+        compareSigs = data.get('compareSigs')
+        response = signory_item_analysis_with_compare_items(oriSig, compareSigs)
+        return jsonify(response)
+    else:
+        return "success"

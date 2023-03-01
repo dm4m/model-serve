@@ -63,3 +63,13 @@ def signory_item_analysis(signory_item):
         tmp['compare_result'] = novelty_compare(signory_item, sig["signory_seg"])
         ans_result.append(tmp)
     return ans_result
+
+def signory_item_analysis_with_compare_items(ori_sig, compare_sigs):
+    ans_result = []
+    for sig in compare_sigs:
+        tmp = {}
+        tmp['relevant_sig_id'] = sig['signory_id']
+        tmp['relevant_sig'] = sig["signory_item"]
+        tmp['compare_result'] = novelty_compare(ori_sig, sig["signory_item"])
+        ans_result.append(tmp)
+    return ans_result
