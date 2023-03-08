@@ -1,11 +1,45 @@
 import pymysql
 import os
+import matplotlib.pyplot as plt
+import networkx as nx
+from docx import Document
 import numpy as np
+from matplotlib.ticker import MaxNLocator
+import matplotlib
+import math
+from sklearn.cluster import KMeans
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt
+from docx.shared import Inches
+import io
+import base64
+from docxcompose.composer import Composer
 import scipy.stats as st
+from pyecharts.charts import Geo
+from pyecharts.charts import Map
+from sklearn.metrics import r2_score
+from docx2pdf import convert
+import pandas as pd
+import seaborn as sns
+from matplotlib.ticker import MaxNLocator
 from pyecharts import options as opts
-from pyecharts.charts import Line,Grid,Bar,Pie
+from pyecharts.charts import Line,Grid,Bar,Pie,Radar
 from pyecharts.faker import Faker
 from pyecharts.globals import ThemeType
+from pyecharts.globals import ChartType
+import json
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
+from pyecharts.render import make_snapshot
+import docx
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_UNDERLINE
+from docx.enum.text import WD_TAB_ALIGNMENT
+from docx.enum.table import WD_ROW_HEIGHT_RULE
+from docx.enum.text import WD_LINE_SPACING
+from snapshot_selenium import snapshot
 
 class mydb:#数据库操作类
 
@@ -221,6 +255,264 @@ class trendanaly(cladata):#趋势分析
         c.set_global_opts(title_opts=opts.TitleOpts(title=str(stime)+"年至"+str(etime)+"年趋势分析柱状图",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))             
         return c.dump_options_with_quotes()
 
+class pdfcreator:#pdf生成器
+    
+    def __init__(self,id,db):
+        self.id=id
+        self.db=db
+        self.db.myexecu("SELECT item_type,corr_id FROM patent.report_content_item where report_id="+str(id))
+        self.data=self.db.data
+
+        
+    
+    def finalword(self):#生成最终的word  
+        a=1
+        pagenum={1:"一、",2:"二、",3:"三、"}      
+        document = Document()
+        mei=document.sections[0].header.paragraphs[0]
+        m=document.sections[0].header
+        text=mei.add_run("专利分析报告") 
+        text.font.size = Pt(10)                
+        text.bold = True                    
+        text.font.name = 'Arial'           
+        text.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')  
+        mei.alignment = WD_ALIGN_PARAGRAPH.CENTER 
+        m.add_paragraph("-----------------------------------------------------------------------------").paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p=document.add_paragraph("专利分析报告") 
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.runs[0].font.size = Pt(36)
+        p.runs[0].font.name = '宋体'
+        p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+        p=document.add_paragraph("目录") 
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.runs[0].font.size = Pt(16)
+        p.runs[0].font.name = '黑体'
+        p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+        if(len(self.addsearchresult())!=0):
+            pp=document.add_paragraph(pagenum[a]+"专利检索结果") 
+            pp.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            pp.runs[0].font.size = Pt(12)
+            pp.runs[0].font.name = '宋体'
+            pp.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+            a+=1
+        if(len(self.addnovelresult())!=0):
+            aa=document.add_paragraph(pagenum[a]+"新颖性分析结果") 
+            aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            aa.runs[0].font.size = Pt(12)
+            aa.runs[0].font.name = '宋体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   
+            a+=1
+        if(len(self.addpicresult())!=0):
+            bb=document.add_paragraph(pagenum[a]+"统计分析结果") 
+            bb.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            bb.runs[0].font.size = Pt(12)
+            bb.runs[0].font.name = '宋体'
+            bb.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   
+            a+=1
+        document.paragraphs[a].runs[0].add_break(docx.enum.text.WD_BREAK.PAGE)
+        ji=1
+        npagenum={1:"1、",2:"2、",3:"3、"}
+        if(len(self.addsearchresult())!=0):
+            aa=document.add_paragraph(npagenum[ji]+"专利检索结果") 
+            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            aa.runs[0].font.size = Pt(16)
+            aa.runs[0].font.name = '黑体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+            for a in self.addsearchresult():
+                table = document.add_table(rows=1, cols=3,style='TableGrid')
+                cells = table.add_row().cells
+                cells[0].text = '标题'
+                cells[1].text = '申请人列表'
+                cells[2].text = "申请时间"
+                rows = table.rows[0]
+                for cell in rows.cells:
+                    shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
+                    cell._tc.get_or_add_tcPr().append(shading_elm)
+                for b in a:
+                    for c in b:
+                        document.styles['Normal'].font.name = u'宋体'
+                        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+                        cells = table.add_row().cells
+                        cells[0].text=c[0]
+                        cells[1].text=c[1]
+                        cells[2].text=c[2]
+            ji+=1  
+            document.add_paragraph(" ")      
+        if(len(self.addnovelresult())!=0):
+            aa=document.add_paragraph(npagenum[ji]+"新颖性分析结果") 
+            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            aa.runs[0].font.size = Pt(16)
+            aa.runs[0].font.name = '黑体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')           
+            for a in self.addnovelresult():
+                p=document.add_paragraph()
+                for b in a:
+                    (key, value), = b.items()
+                    if key=="有以下相关主权项：":
+                        document.styles['Normal'].font.name = u'宋体'
+                        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+                        p.add_run(key)
+                        p.add_run("\n")
+                    else:
+                        document.styles['Normal'].font.name = u'宋体'
+                        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+                        p.add_run(key)                    
+                        p.add_run(value)
+                        p.add_run("______________________________________________________________________________")
+                        p.add_run("\n")
+                        #document.add_paragraph("______________________________________________________________________________")
+            ji+=1
+            document.add_paragraph(" ")
+        if(len(self.addpicresult())!=0):
+            aa=document.add_paragraph(npagenum[ji]+"统计分析结果") 
+            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            aa.runs[0].font.size = Pt(16)
+            aa.runs[0].font.name = '黑体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')   
+            for i in self.addpicresult():
+                if i["type"]=="柱状":
+                    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                    c.add_xaxis(i["xaxis"]) 
+                    if len(i["data"])==1: 
+                        (key, value), = i["data"].items()
+                        c.add_yaxis( series_name=key,y_axis=value)
+                    else:          
+                        for key,value in i["data"].items():  
+                            c.add_yaxis( series_name=key,y_axis=value)
+                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
+                    make_snapshot(snapshot, c.render(), "bar.png",is_remove_html=True)
+                    paragraph=document.add_paragraph()
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
+                    run = paragraph.add_run("")
+                    run.add_picture("bar.png",width=Inches(7.0))
+                    document.add_paragraph("   ")
+                if i["type"]=="折线":
+                    c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
+                    c.add_xaxis(i["xaxis"])
+                    if len(i["data"])==1: 
+                        (key, value), = i["data"].items()
+                        c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                    else:          
+                        for key,value in i["data"].items():  
+                            c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                    make_snapshot(snapshot, c.render(), "line.png",is_remove_html=True)
+                    paragraph=document.add_paragraph()
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
+                    run = paragraph.add_run("")
+                    run.add_picture("line.png",width=Inches(7.0))
+                    document.add_paragraph("   ")
+                if i["type"]=="饼状":
+                    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                    c.add("",i["data"]) 
+                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+                    make_snapshot(snapshot, c.render(), "pie.png",is_remove_html=True)
+                    paragraph=document.add_paragraph()
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT    
+                    run = paragraph.add_run("")
+                    run.add_picture("pie.png",width=Inches(7.0))
+                    document.add_paragraph("   ")
+        document.save(str(self.id)+".docx")
+    
+    def addsearchresult(self):#专利检索内容增加
+        tabledata=[]
+        mydata=[]
+        for i in self.data:            
+            if i[0]=="检索结果":
+                updata=[]
+                self.db.myexecu("SELECT patent_id FROM patent.search_result_item where search_result_id="+str(i[1]))
+                for a in self.db.data:
+                    mydata.append(a[0])
+                for a in mydata:
+                    uppdata=[]
+                    self.db.myexecu("SELECT title,inventor_list,application_date FROM patent.patent where id ="+str(a))
+                    for b in self.db.data:
+                        uppdata.append(b)
+                    updata.append(uppdata)
+                tabledata.append(updata)
+        return tabledata
+    
+    def addnovelresult(self):#新颖性内容增加
+        mydata=[]
+        for i in self.data:
+            if i[0]=="新颖性比对结果":
+                updata=[]
+                self.db.myexecu("SELECT ori_signory FROM patent.novelty_ana_result where novelty_ana_id="+str(i[1]))
+                updata.append({"原主权项：":self.db.data[0]})
+                updata.append({"有以下相关主权项：":""})
+                self.db.myexecu("SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id="+str(i[1]))
+                for a in self.db.data:
+                    updata.append({"相关主权项：":a[0]})
+                    updata.append({"来自专利：":a[2]}) 
+                    updata.append({"审查意见为：":a[1]})                   
+                mydata.append(updata)
+        return mydata
+    
+    def addpicresult(self):#图片内容
+        outresult=[]
+        tabledata=[]
+        for i in self.data:
+            if i[0]=="统计分析结果":
+                self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(i[1]))
+                myjson=json.loads(str(self.db.data[0])[2:-3])
+                mytitle=myjson["title"][0]["text"]
+                type=mytitle[-3:-1]
+                if type=="柱状":
+                    barresult={}
+                    barresult["type"]="柱状"
+                    barresult["title"]=mytitle
+                    time=[]
+                    for a in myjson["xAxis"][0]["data"]:
+                        time.append(a)
+                    barresult["xaxis"]=time
+                    mydata={}
+                    for a in myjson["series"]:
+                        mydata[a["name"]]=a["data"]
+                    barresult["data"]=mydata
+                    outresult.append(barresult)
+                if type=="折线":
+                    barresult={}
+                    barresult["type"]="折线"
+                    barresult["title"]=mytitle
+                    time=[]
+                    for a in myjson["xAxis"][0]["data"]:
+                        time.append(a)
+                    barresult["xaxis"]=time
+                    mydata={}
+                    for a in myjson["series"]:
+                        updata=[]
+                        for b in a["data"]:
+                            updata.append(b[1])
+                        mydata[a["name"]]=updata
+                    barresult["data"]=mydata
+                    outresult.append(barresult)
+                if type=="饼状":
+                    barresult={}
+                    barresult["type"]="饼状"
+                    barresult["title"]=mytitle
+                    time=[]
+                    mydata=[]
+                    a = myjson["series"][0]["data"]
+                    for b in a:
+                        mydata.append([b["name"],b["value"]])
+
+                    barresult["data"]=mydata
+                    outresult.append(barresult)
+        return outresult
+        
+
+  
+    
+    def pdfcreate(self):#生成最后的PDF
+        convert(str(self.id)+".docx", str(self.id)+".pdf")
+        path = str(self.id)+".pdf"
+        with open(path, "rb") as pdf_file:
+            encoded_string = str(base64.b64encode(pdf_file.read()),encoding='utf-8')
+        return encoded_string 
+
+
+
     
 def myinput(list): #将系统的输入转换成sql语句中所要的格式
     mystr='('
@@ -327,6 +619,14 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     if anaType == 'area':
         return area(patentIds,figType)
     return trend(patentIds,figType)
+
+def pdf_output(id):#输出pdf
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    mypdf=pdfcreator(id,db)
+    mypdf.finalword()
+    output=mypdf.pdfcreate()
+    db.endconn()
+    return  output
 
 
 
