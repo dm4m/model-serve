@@ -57,5 +57,5 @@ def search_by_patent(signory_list):
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
     rerank_list = rerank(last_query_embedding,last_other_embedding)
-    print("len:{}".format(len(rerank_list)))
+    # print("len:{}".format(len(rerank_list)))
     return rerank_list
