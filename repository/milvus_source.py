@@ -11,7 +11,7 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
     print("query vector:" + str(query_embeddings))
     search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
     # 以下查询参数均为HNSW准备，ef取值为top k到3w多
-    search_params_HNSW = {"ef":128}
+    search_params_HNSW = {"metric_type":"L2","params":{"ef": 128}}
     vec_results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params, limit=limit,
                                     expr=None)
     connections.disconnect("default")
