@@ -7,7 +7,7 @@ from services.search_classes import aggregate,rerank,encode
 
 def patent_neural_search(field, query,schema=None):
     if field == 'title' :
-        id_list = get_relevant_id_list("patent", "title", query)
+        id_list = get_relevant_id_list("title", "title", query)
         return jsonify(id_list)
     elif field == 'abstract':
         id_list = get_relevant_id_list("abstract", "abstract", query)
@@ -57,5 +57,5 @@ def search_by_patent(signory_list):
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
     rerank_list = rerank(last_query_embedding,last_other_embedding)
-    # print("len:{}".format(len(rerank_list)))
+    print("len:{}".format(len(rerank_list)))
     return rerank_list
