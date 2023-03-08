@@ -25,7 +25,7 @@ def patent_neural_search(field, query,schema=None):
         id_list = []
         embed_list = []
         query_embeddings = encode(query)
-        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory_HNSW", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"])
+        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"])
         return_list = []
         return_list.append(id_list)
         return_list.append(embed_list)
@@ -57,4 +57,5 @@ def search_by_patent(signory_list):
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
     rerank_list = rerank(last_query_embedding,last_other_embedding)
+    print("len:{}".format(len(rerank_list)))
     return rerank_list
