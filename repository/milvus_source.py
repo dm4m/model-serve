@@ -9,10 +9,10 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
     pt_outputs = model(**pt_inputs)
     query_embeddings = [pt_outputs["last_hidden_state"][0][0].tolist()]
     print("query vector:" + str(query_embeddings))
-    search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
+    # search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
     # 以下查询参数均为HNSW准备，ef取值为top k到3w多
-    search_params_HNSW = {"metric_type":"L2","params":{"ef": 128}}
-    vec_results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params, limit=limit,
+    search_params_HNSW = {"metric_type": "L2", "params": {"ef":128}}
+    vec_results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params_HNSW, limit=limit,
                                     expr=None)
     connections.disconnect("default")
     return vec_results
