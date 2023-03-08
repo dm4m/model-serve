@@ -8,7 +8,7 @@ from services.search_classes import aggregate,rerank,encode
 
 def patent_neural_search(field, query,schema=None):
     if field == 'title' :
-        id_list = get_relevant_id_list("patent", "title", query)
+        id_list = get_relevant_id_list("title", "title", query)
         return jsonify(id_list)
     elif field == 'abstract':
         id_list = get_relevant_id_list("abstract", "abstract", query)
@@ -30,7 +30,7 @@ def patent_neural_search(field, query,schema=None):
         signory = FieldSchema(name="signory", dtype=DataType.FLOAT_VECTOR,dim=768,description="")
         schema = CollectionSchema(fields=[signory_id, patent_id, signory],auto_id=False,description="signory_seg of patent,HNSW")
         query_embeddings = encode(query)
-        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory_HNSW", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"])
+        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"])
         return_list = []
         return_list.append(id_list)
         return_list.append(embed_list)
