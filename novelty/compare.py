@@ -78,13 +78,13 @@ class Comparator:
 
         info_1 = []
         for word in sdp_feature_1:
-            if word[0] not in info_1 and len(word[0]) <= 10:
+            if word[0] not in info_1 and len(word[0]) <= 10 and word[0] != '特征':
                 info_1.append(word[0])
         for word in ner_feature_1:
-            if word[0] not in info_1 and len(word[0]) <= 10:
+            if word[0] not in info_1 and len(word[0]) <= 10 and word[0] != '特征':
                 info_1.append(word[0])
         for word in srl_feature_1:
-            if word not in info_1 and len(word) <= 10:
+            if word not in info_1 and len(word) <= 10 and word != '特征':
                 info_1.append(word)
 
         # info_2 = []
@@ -106,6 +106,8 @@ class Comparator:
         info_set = []
         for word_1 in info_1:
             for idx, word_2 in enumerate(words_2):
+                if word_2 == '特征':
+                    continue
                 relation = hownet.get_synset_relation(word_1, word_2)
                 if pos_2[idx] == 'n' and [word_1, word_2] not in word_pairs and relation != []:
                     word_pairs.append([word_1, word_2])

@@ -293,8 +293,8 @@ class LtpParser:
     def parser_main(self, HanLP, sentence):
 
         table = {ord(f): ord(t) for f, t in zip(
-            u'～~，。！？【】（）％＃＠＆１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
-            u'--,.!?[]()%#@&1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')}
+            u'：～~，．。！？【】（）％＃＠＆１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
+            u':--,..!?[]()%#@&1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')}
         sentence = sentence.translate(table)
 
         doc = HanLP(sentence, tasks=['tok/fine','pos/pku', 'ner/msra'])
