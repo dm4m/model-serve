@@ -132,6 +132,10 @@ class Comparator:
         for info in info_set:
             info_set_str += f"{info[0]}  {info[2]}  {info[4]}\n"
         # print(info_set_str)
+        if info_set_str != '':
+            info_set_str = '\n以下为两句主权项中存在相关关系的词：\n' + info_set_str
+        else:
+            info_set_str = '\n两句主权项中无存在相关关系的词对。\n'
 
 
         # # 词之间的关系比较
@@ -220,9 +224,9 @@ class Comparator:
         # threshold = 0.4
         # if difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[0]).quick_ratio()>=threshold:
         if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
-            print(f"可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性")
+            print(f"可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。")
             review_flag += 1
-            review_opinion += f"\n可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性\n"
+            review_opinion += f"\n可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。\n"
 
         return review_flag, review_opinion
 
@@ -259,13 +263,13 @@ class Comparator:
         review_flag_temp = review_flag
         for i in range(1,len(relation_list)):
             if 'hyponym' in relation_list[i][2]:
-                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性")
+                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。")
                 review_flag += 1
-                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性\n"
+                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。\n"
             if 'hypernym' in relation_list[i][2]:
-                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性")
+                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。")
                 review_flag += 1
-                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性\n"
+                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。\n"
 
         # if review_flag == review_flag_temp:
         #     # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
@@ -491,49 +495,49 @@ class Comparator:
 
                     # 1
                     if (number_range_list_2[j][0] < number_range_list_2[j][1]) and (number_range_list_2[j][0] <= number_range_list_1[i][0] == number_range_list_1[i][1] <= number_range_list_2[j][1]):
-                        print(f"(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
                     if (number_range_list_2[j][0] < number_range_list_2[j][1]) and (number_range_list_2[j][0] <= number_range_list_1[i][0] < number_range_list_1[i][1] <= number_range_list_2[j][1]):
-                        print(f"(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 2
                     # print(f"({number_range_list_1[i][0]} < {number_range_list_1[i][1]}) and ({number_range_list_2[j][0]} < {number_range_list_2[j][1]}) and (({number_range_list_2[j][0]} <= {number_range_list_1[i][0]} <= {number_range_list_2[j][1]}) or ({number_range_list_2[j][0]} <= {number_range_list_1[i][1]} <= {number_range_list_2[j][1]}))")
                     if (number_range_list_1[i][0] < number_range_list_1[i][1]) and (number_range_list_2[j][0] < number_range_list_2[j][1]) and ((number_range_list_2[j][0] <= number_range_list_1[i][0] <= number_range_list_2[j][1]) or (number_range_list_2[j][0] <= number_range_list_1[i][1] <= number_range_list_2[j][1])):
-                        print(f"(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 3
                     if (number_range_list_1[i][0] < number_range_list_1[i][1]) and (number_range_list_2[j][0] == number_range_list_2[j][1]):
                         if number_range_list_2[j][0] == number_range_list_1[i][0] or number_range_list_2[j][0] == number_range_list_1[i][1]:
-                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性")
+                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。")
                             review_flag += 1
-                            review_opinion += f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性\n"
+                            review_opinion += f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。\n"
                         if number_range_list_1[i][0] < number_range_list_2[j][0] < number_range_list_1[i][1]:
-                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性")
+                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。")
                             review_flag += 1
-                            review_opinion += f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性\n"
+                            review_opinion += f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。\n"
 
                     # 4
                     if number_range_list_1[i][0] < number_range_list_2[j][0] < number_range_list_2[j][1] < number_range_list_1[i][1]:
-                        print(f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 5
                     if (number_range_list_1[i][0] == number_range_list_2[j][0]) and (number_range_list_1[i][1] == number_range_list_2[j][1]):
-                        print(f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 6
                     if (number_range_list_1[i][0] <= number_range_list_1[i][1]) and (number_range_list_2[j][0] <= number_range_list_2[j][1]) and ((number_range_list_1[i][0] > number_range_list_2[j][1]) or (number_range_list_1[i][1] < number_range_list_2[j][0])):
-                        print(f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性")
+                        print(f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性\n"
+                        review_opinion += f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
         
         return review_flag, review_opinion
 
@@ -675,5 +679,5 @@ def novelty_compare(main_sig, com_sig):
     d = time.time()
     print("比较时间：", d - c)
 
-    # print(f'\nreview_opinion:\n{review_opinion}***\n')
-    return review_opinion, words_info, words_info_str
+    # return review_opinion, words_info, words_info_str
+    return words_info_str + review_opinion
