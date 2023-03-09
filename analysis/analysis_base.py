@@ -1,4 +1,4 @@
-import pymysql
+import mysql.connector
 import os
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -53,7 +53,7 @@ class mydb:#数据库操作类
         self.charset=charset
         
     def myconnect(self):#连接数据库
-        conn = pymysql.connect(host=self.host,user=self.user,password=self.password,database=self.database,port=self.port,charset = self.charset)
+        conn = mysql.connector.connect(host=self.host,user=self.user,password=self.password,database=self.database,port=self.port,charset = self.charset)
         return conn
 
     def myexecu(self,execuword):#执行查询语句并保存在data中
@@ -61,12 +61,12 @@ class mydb:#数据库操作类
         cursor=self.conn.cursor()
         cursor.execute(execuword)        
         self.data = cursor.fetchall()
+        self.conn.commit()
         cursor.close()
 
 
     def endconn(self):#断开数据库连接
         self.conn.close()
-        print("success")
 
 class cladata:#基类
 
@@ -511,7 +511,7 @@ class pdfcreator:#pdf生成器
     
     def pdfcreate(self):#生成最后的PDF
         convert(self.path+"\\"+str(self.id)+".docx", self.path+"\\"+str(self.id)+".pdf")
-        addstr=self.path+"\\"+str(self.id)+".pdf"
+        addstr=self.path+"\\"+"\\"+str(self.id)+".pdf"
         return addstr
 
 
@@ -628,8 +628,12 @@ def pdf_output(id):#输出pdf
     mypdf=pdfcreator(id,db)
     mypdf.finalword()
     output=mypdf.pdfcreate()
+    db.myexecu('update patent.report2generate set status="已生成",pdf_file_path="'+output+'" where report_id='+str(mypdf.id))
     db.endconn()
-    return  output
+    print("报告生成完毕")
+    return  
+
+
 
 
 
