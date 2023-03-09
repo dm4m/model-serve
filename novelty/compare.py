@@ -224,9 +224,9 @@ class Comparator:
         # threshold = 0.4
         # if difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[0]).quick_ratio()>=threshold:
         if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
-            print(f"可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。")
+            print(f"可能涉及惯用手段的直接置换：\n对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。")
             review_flag += 1
-            review_opinion += f"\n可能涉及惯用手段的直接置换：对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。\n"
+            review_opinion += f"\n可能涉及惯用手段的直接置换：\n对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。\n"
 
         return review_flag, review_opinion
 
@@ -263,13 +263,13 @@ class Comparator:
         review_flag_temp = review_flag
         for i in range(1,len(relation_list)):
             if 'hyponym' in relation_list[i][2]:
-                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。")
+                print(f"涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。")
                 review_flag += 1
-                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。\n"
+                review_opinion += f"\n涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。\n"
             if 'hypernym' in relation_list[i][2]:
-                print(f"涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。")
+                print(f"涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。")
                 review_flag += 1
-                review_opinion += f"\n涉及上下位概念的比较：对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。\n"
+                review_opinion += f"\n涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。\n"
 
         # if review_flag == review_flag_temp:
         #     # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
