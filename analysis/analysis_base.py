@@ -40,6 +40,7 @@ from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_LINE_SPACING
 from snapshot_selenium import snapshot
+import yaml
 
 class mydb:#数据库操作类
 
@@ -262,6 +263,10 @@ class pdfcreator:#pdf生成器
         self.db=db
         self.db.myexecu("SELECT item_type,corr_id FROM patent.report_content_item where report_id="+str(id))
         self.data=self.db.data
+        yaml_path="../config\\config.yml"
+        with open(yaml_path,"r",encoding="utf-8") as f:
+            data=yaml.load(f,Loader=yaml.FullLoader)
+        self.path=data['pdf-output-path']
 
         
     
@@ -380,11 +385,11 @@ class pdfcreator:#pdf生成器
                         for key,value in i["data"].items():  
                             c.add_yaxis( series_name=key,y_axis=value)
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
-                    make_snapshot(snapshot, c.render(), "bar.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"bar.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
                     run = paragraph.add_run("")
-                    run.add_picture("bar.png",width=Inches(7.0))
+                    run.add_picture(self.path+"\\"+str(self.id)+"bar.png",width=Inches(7.0))
                     document.add_paragraph("   ")
                 if i["type"]=="折线":
                     c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
@@ -396,24 +401,24 @@ class pdfcreator:#pdf生成器
                         for key,value in i["data"].items():  
                             c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                    make_snapshot(snapshot, c.render(), "line.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"line.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
                     run = paragraph.add_run("")
-                    run.add_picture("line.png",width=Inches(7.0))
+                    run.add_picture(self.path+"\\"+str(self.id)+"line.png",width=Inches(7.0))
                     document.add_paragraph("   ")
                 if i["type"]=="饼状":
                     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                     c.add("",i["data"]) 
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
                     c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
-                    make_snapshot(snapshot, c.render(), "pie.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"pie.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT    
                     run = paragraph.add_run("")
-                    run.add_picture("pie.png",width=Inches(7.0))
+                    run.add_picture(self.path+"\\"+str(self.id)+"pie.png",width=Inches(7.0))
                     document.add_paragraph("   ")
-        document.save(str(self.id)+".docx")
+        document.save(self.path+"\\"+str(self.id)+".docx")
     
     def addsearchresult(self):#专利检索内容增加
         tabledata=[]
@@ -505,11 +510,9 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        convert(str(self.id)+".docx", str(self.id)+".pdf")
-        path = str(self.id)+".pdf"
-        with open(path, "rb") as pdf_file:
-            encoded_string = str(base64.b64encode(pdf_file.read()),encoding='utf-8')
-        return encoded_string 
+        convert(self.path+"\\"+str(self.id)+".docx", self.path+"\\"+str(self.id)+".pdf")
+        addstr=self.path+"\\"+str(self.id)+".pdf"
+        return addstr
 
 
 
@@ -627,8 +630,6 @@ def pdf_output(id):#输出pdf
     output=mypdf.pdfcreate()
     db.endconn()
     return  output
-
-
 
 
 
