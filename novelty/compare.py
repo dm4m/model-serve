@@ -36,7 +36,7 @@ class Comparator:
 
         # 词比较
         # a = time.time()
-        review_flag, review_opinion, words_info = self.wordlevel_point(review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2)
+        review_flag, review_opinion, words_info, words_info_str = self.wordlevel_point(review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2)
         # b = time.time()
         # print("词比较时间：", b-a)
 
@@ -60,7 +60,7 @@ class Comparator:
             print('暂未触发相关规则。')
             review_opinion += '暂未触发相关规则。\n'
         
-        return review_opinion, words_info
+        return review_opinion, words_info, words_info_str
 
     def relations_translation(self, relations):
         relations_chinese = []
@@ -128,6 +128,10 @@ class Comparator:
         print("info_set:", info_set)
         # b = time.time()
         # print("wordlevel_point耗时：",b-a)
+        info_set_str = ''
+        for info in info_set:
+            info_set_str += f"{info[0]}  {info[2]}  {info[4]}\n"
+        # print(info_set_str)
 
 
         # # 词之间的关系比较
@@ -153,7 +157,7 @@ class Comparator:
         # print("words_info:", words_info)
         # b = time.time()
         # print("wordlevel_point耗时：",b-a)
-        return review_flag, review_opinion, info_set
+        return review_flag, review_opinion, info_set, info_set_str
 
     # 得到惯用手段的直接置换的substitution_words
     def substitution_words_for_direct_substitution(self, sovereign_triples):
@@ -667,10 +671,9 @@ def novelty_compare(main_sig, com_sig):
     comparator = Comparator()
     # 输出
     c = time.time()
-    review_opinion, words_info = comparator.sovereign_compare(extractor, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
+    review_opinion, words_info, words_info_str = comparator.sovereign_compare(extractor, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
     d = time.time()
     print("比较时间：", d - c)
 
     # print(f'\nreview_opinion:\n{review_opinion}***\n')
-    return review_opinion, words_info
-    return review_opinion, words_info
+    return review_opinion, words_info, words_info_str
