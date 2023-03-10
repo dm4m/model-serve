@@ -58,7 +58,7 @@ class Comparator:
 
         if review_flag == 0:
             print('暂未触发相关规则。')
-            review_opinion += '暂未触发相关规则。\n'
+            review_opinion += '\t暂未触发相关规则。\n'
         
         return review_opinion, words_info, words_info_str
 
