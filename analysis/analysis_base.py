@@ -53,7 +53,15 @@ class mydb:#数据库操作类
         self.charset=charset
         
     def myconnect(self):#连接数据库
-        conn = mysql.connector.connect(host=self.host,user=self.user,password=self.password,database=self.database,port=self.port,charset = self.charset)
+        conn = mysql.connector.connect(
+            host=self.host,
+            user=self.user,
+            password=self.password,
+            database=self.database,
+            port=self.port,
+            charset = self.charset
+            # auth_plugin='mysql_native_password'
+        )
         return conn
 
     def myexecu(self,execuword):#执行查询语句并保存在data中
@@ -263,7 +271,7 @@ class pdfcreator:#pdf生成器
         self.db=db
         self.db.myexecu("SELECT item_type,corr_id FROM patent.report_content_item where report_id="+str(id))
         self.data=self.db.data
-        yaml_path="../config\\config.yml"
+        yaml_path= os.path.dirname(os.path.dirname(__file__)) + "/config/config.yml"
         with open(yaml_path,"r",encoding="utf-8") as f:
             data=yaml.load(f,Loader=yaml.FullLoader)
         self.path=data['pdf-output-path']
