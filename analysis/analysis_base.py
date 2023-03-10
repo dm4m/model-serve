@@ -40,7 +40,7 @@ from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_LINE_SPACING
 from snapshot_selenium import snapshot
 import yaml
-from subprocess import Popen
+import subprocess
 
 class mydb:#数据库操作类
 
@@ -324,7 +324,7 @@ class pdfcreator:#pdf生成器
             a+=1
         document.paragraphs[a].runs[0].add_break(docx.enum.text.WD_BREAK.PAGE)
         ji=1
-        npagenum={1:"1、",2:"2、",3:"3、"}
+        npagenum={1:"一、",2:"二、",3:"三、"}
         if(len(self.addsearchresult())!=0):
             aa=document.add_paragraph(npagenum[ji]+"专利检索结果") 
             aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -352,6 +352,7 @@ class pdfcreator:#pdf生成器
             ji+=1  
             document.add_paragraph(" ")      
         if(len(self.addnovelresult())!=0):
+            numa=1           
             aa=document.add_paragraph(npagenum[ji]+"新颖性分析结果") 
             aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
             aa.runs[0].font.size = Pt(16)
@@ -362,18 +363,30 @@ class pdfcreator:#pdf生成器
                 for b in a:
                     (key, value), = b.items()
                     if key=="有以下相关主权项：":
-                        document.styles['Normal'].font.name = u'宋体'
-                        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+                        p=document.add_paragraph()
+                        p.style.font.name = '宋体'
+                        p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                         p.add_run(key)
                         p.add_run("\n")
                     else:
-                        document.styles['Normal'].font.name = u'宋体'
-                        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
-                        p.add_run(key)                    
-                        p.add_run(value)
-                        p.add_run("______________________________________________________________________________")
-                        p.add_run("\n")
-                        #document.add_paragraph("______________________________________________________________________________")
+                        if key=="原主权项：":
+                            p=document.add_paragraph()
+                            p.style.font.name = '黑体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '黑体') 
+                            p.add_run("新颖性分析结果"+str(numa)+":")
+                            p=document.add_paragraph()
+                            p.style.font.name = '宋体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
+                            p.add_run(key)                    
+                            p.add_run(value)
+                            numa+=1
+                        else:
+                            p=document.add_paragraph()
+                            p.style.font.name = '宋体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
+                            p.add_run(key)                    
+                            p.add_run(value)
+
             ji+=1
             document.add_paragraph(" ")
         if(len(self.addpicresult())!=0):
@@ -518,12 +531,14 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        file=self.path+"\\"+str(self.id)+".docx"        
-        Popen(['abiword', '-t', 'pdf', file]).communicate()
-        addstr=self.path+"\\"+"\\"+str(self.id)+".pdf"
-        return addstr
+        return generate_pdf(self.path+"\\"+str(self.id)+".docx", self.path+"\\"+str(self.id)+".pdf")
 
 
+
+def generate_pdf(doc_path, path):
+
+    subprocess.call(['soffice', '--convert-to', 'pdf', '--outdir', path, doc_path])
+    return path
 
     
 def myinput(list): #将系统的输入转换成sql语句中所要的格式
