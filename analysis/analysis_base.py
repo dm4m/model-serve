@@ -19,7 +19,6 @@ import scipy.stats as st
 from pyecharts.charts import Geo
 from pyecharts.charts import Map
 from sklearn.metrics import r2_score
-from docx2pdf import convert
 import pandas as pd
 import seaborn as sns
 from matplotlib.ticker import MaxNLocator
@@ -41,6 +40,7 @@ from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.text import WD_LINE_SPACING
 from snapshot_selenium import snapshot
 import yaml
+from subprocess import Popen
 
 class mydb:#数据库操作类
 
@@ -510,7 +510,8 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        convert(self.path+"\\"+str(self.id)+".docx", self.path+"\\"+str(self.id)+".pdf")
+        file=self.path+"\\"+str(self.id)+".docx"        
+        Popen(['abiword', '-t', 'pdf', file]).communicate()
         addstr=self.path+"\\"+"\\"+str(self.id)+".pdf"
         return addstr
 
