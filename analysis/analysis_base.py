@@ -406,11 +406,11 @@ class pdfcreator:#pdf生成器
                         for key,value in i["data"].items():  
                             c.add_yaxis( series_name=key,y_axis=value)
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
-                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"bar.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
                     run = paragraph.add_run("")
-                    run.add_picture(self.path+"\\"+str(self.id)+"bar.png",width=Inches(7.0))
+                    run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
                     document.add_paragraph("   ")
                 if i["type"]=="折线":
                     c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
@@ -422,24 +422,24 @@ class pdfcreator:#pdf生成器
                         for key,value in i["data"].items():  
                             c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"line.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
                     run = paragraph.add_run("")
-                    run.add_picture(self.path+"\\"+str(self.id)+"line.png",width=Inches(7.0))
+                    run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
                     document.add_paragraph("   ")
                 if i["type"]=="饼状":
                     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                     c.add("",i["data"]) 
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
                     c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
-                    make_snapshot(snapshot, c.render(), self.path+"\\"+str(self.id)+"pie.png",is_remove_html=True)
+                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT    
                     run = paragraph.add_run("")
-                    run.add_picture(self.path+"\\"+str(self.id)+"pie.png",width=Inches(7.0))
+                    run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
                     document.add_paragraph("   ")
-        document.save(self.path+"\\"+str(self.id)+".docx")
+        document.save(self.path+str(self.id)+".docx")
     
     def addsearchresult(self):#专利检索内容增加
         tabledata=[]
@@ -531,7 +531,7 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        return generate_pdf(self.path+"\\"+str(self.id)+".docx", self.path+"\\"+str(self.id)+".pdf")
+        return generate_pdf(self.path+str(self.id)+".docx", self.path+str(self.id)+".pdf")
 
 
 
