@@ -138,7 +138,7 @@ class authoranaly(cladata):#申请人分析
             i=str(i)
             self.db.myexecu("select count(inventor_list) as cnt from( select inventor_list from patent.patent where  (inventor_list like'%; "+i+"'"+" or inventor_list like'%"+i+";%'"+" or inventor_list like '%;"+i+"'"+" or inventor_list ="+"'"+i+"'"+") and id in"+id+" ) as ccc")
             num=str(self.db.data)
-            num=num[2:-4]
+            num=num[2:-3]
             num=int(num)
             dic[i]=num
         for i in dic.values():
