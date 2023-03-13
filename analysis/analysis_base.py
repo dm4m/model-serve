@@ -531,7 +531,8 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        return generate_pdf(self.path+str(self.id)+".docx", self.path+str(self.id)+".pdf")
+        generate_pdf(self.path+str(self.id)+".docx", self.path)
+        return self.path+str(self.id)+".pdf"
 
 
 
