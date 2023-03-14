@@ -1,10 +1,12 @@
 import io
 import os
-
+import time
 
 import babelnet as bn
 from babelnet.language import Language
 from babelnet.data.relation import BabelPointer
+from multiprocessing.context import Process
+# import eventlet
 
 '''
 byl = bn.get_synsets('硝酸钾', from_langs=[Language.ZH])
@@ -18,6 +20,21 @@ print(byl[0].lemmas(Language.ZH))
 cate = byl[0].categories(Language.ZH)
 print(cate[0].value)
 '''
+
+#
+# class FTimer(Process):
+#     def __init__(self, word):
+#         super().__init__()
+#         self.word = word
+#         self.synsets = []
+#         pass
+#
+#     def run(self):
+#         try:
+#             self.synsets = bn.get_synsets(self.word, from_langs=[Language.ZH])
+#         except Exception:
+#             self.synsets = []
+
 class Babeluse:
     def __init__(self,relation_num=100):
         self.relation_num =relation_num
@@ -25,7 +42,8 @@ class Babeluse:
         #因为相关词语按照相关程度从高到低排序
 
     def category(self,word):#查找该词所属类别
-        synset = bn.get_synsets(word, from_langs=[Language.ZH])
+        synset = self.get_synsets(word)
+        # print("synset:", synset)
         cate = []
         if len(synset)!= 0:
             for i in synset:
@@ -36,7 +54,8 @@ class Babeluse:
         return cate
 
     def another_name(self,word):#查找该词的别名
-        synset = bn.get_synsets(word, from_langs=[Language.ZH])
+        synset = self.get_synsets(word)
+        # print("synset:", synset)
         name = []
 
         if synset == []:
@@ -49,7 +68,8 @@ class Babeluse:
         return name
 
     def re_synset(self,word):#查找该词的synset
-        synset = bn.get_synsets(word, from_langs=[Language.ZH])
+        synset = self.get_synsets(word)
+        # print("synset:", synset)
         return synset
 
     def domain_name_Chinese(self,word):
@@ -93,7 +113,8 @@ class Babeluse:
 
 
     def domain(self,word):#查找该词所属领域
-        synset = bn.get_synsets(word, from_langs=[Language.ZH])
+        synset = self.get_synsets(word)
+        # print("synset:", synset)
         dom_list = []
         for j in synset:
             dom = j.domains
@@ -109,7 +130,8 @@ class Babeluse:
         return dom_name
 
     def holonym(self,word):
-        synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+        synsets = self.get_synsets(word)
+        # print("synsets:", synsets)
         holonym_list = []
 
         if synsets == []:
@@ -129,7 +151,8 @@ class Babeluse:
         return holonym_list
 
     def hypernym(self,word):
-        synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+        synsets = self.get_synsets(word)
+        # print("synsets:", synsets)
         hypernym_list = []
 
         if synsets == []:
@@ -159,7 +182,8 @@ class Babeluse:
         return hypernym_list
 
     def hyponymy(self,word):
-        synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+        synsets = self.get_synsets(word)
+        # print("synsets:", synsets)
         hyponymy_list = []
 
         if synsets == []:
@@ -190,7 +214,8 @@ class Babeluse:
         return hyponymy_list
 
     def meronym(self,word):
-        synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+        synsets = self.get_synsets(word)
+        # print("synsets:", synsets)
         meronym_list = []
         synset = synsets[0]
         relation = synset.outgoing_edges()
@@ -206,8 +231,12 @@ class Babeluse:
                         meronym_list.append(lemma)
         return meronym_list
 
-    def get_related(self,word):
-        synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+    def get_related(self, word):
+
+        # synsets = bn.get_synsets(word, from_langs=[Language.ZH])
+        synsets = self.get_synsets(word)
+        # print("synsets:", synsets)
+
         relate_list = {}
 
         if synsets == []:
@@ -233,3 +262,57 @@ class Babeluse:
             relate_list[t.relation_name] = relate_list[t.relation_name] + temp if t.relation_name in relate_list else temp
         return relate_list
         #形式["hypernym",[[List]属于hypernym的一堆词]]
+
+    def get_synsets(self, word):
+        # return bn.get_synsets(word, from_langs=[Language.ZH])
+        try:
+            return bn.get_synsets(word, from_langs=[Language.ZH])
+        except Exception as e:
+            return []
+        # import threading
+        # synsets = []
+        #
+        # class MyThread(threading.Thread):
+        #     def __init__(self, func, args=()):
+        #         super(MyThread, self).__init__()
+        #         self.func = func
+        #         self.args = args
+        #     def run(self):
+        #         self.result = self.func(*self.args)  # 在执行函数的同时，把结果赋值给result
+        #     def get_result(self):
+        #         try:
+        #             return self.result
+        #         except Exception as e:
+        #             return None
+        #
+        # def bn_synsets(word):
+        #     return bn.get_synsets(word, from_langs=[Language.ZH])
+        #
+        # t = MyThread(bn_synsets, args=(word))
+        # t.start()
+        # t.join(timeout=1)
+        # if t.get_result() != None:
+        #     synsets = t.get_result()
+        # # print("synsets:", synsets)
+        #
+        # # def bn_synsets(word, synsets):
+        # #     a = time.time()
+        # #     print('\n', a)
+        # #     tmp = bn.get_synsets(word, from_langs=[Language.ZH])
+        # #     if tmp != []:
+        # #         synsets.append(tmp)
+        # #     b = time.time()
+        # #     print('\n', b)
+        # #     print("当前调用时间：", b - a)
+        # #     print("没有跳过这条输出")
+        # #
+        # # t = threading.Thread(target=bn_synsets, args=(word, synsets))
+        # # t.setDaemon(True)
+        # # t.start()
+        # # t.join(timeout=1)
+        # # print("synsets:", synsets)
+        # # print("跳过了输出")
+
+        # return synsets
+
+
