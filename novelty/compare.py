@@ -168,14 +168,12 @@ class Comparator:
         sovereign_triples_substitution_words = []
         triples_copy = sovereign_triples.copy()
         for idx, triple in enumerate(sovereign_triples):
-
             for i in [0, 2]:
                 words, postags = parser.words_postags(HanLP, triple[i])
                 triples_copy[idx][i] = ''
                 for j in range(len(words)):
                     if postags[j] != 'p':  # 删除介词
                         triples_copy[idx][i] += words[j]
-
             sovereign_triples_substitution_words.append(self.substitution_words(bu, triples_copy[idx], 1))
         return sovereign_triples_substitution_words, triples_copy
 

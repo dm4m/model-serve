@@ -54,7 +54,6 @@ def aggregate(id_score_list):
 def rerank(query_vec,last_embed):
     # 输入：聚合后查询向量、文档向量
     # 输入：专利id列表,list
-
     doc_score = {}
     for docs in last_embed:
         mul_res = [x*y for x,y in zip(query_vec,docs["embedding"])]
