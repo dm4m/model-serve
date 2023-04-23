@@ -408,8 +408,11 @@ class pdfcreator:#pdf生成器
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
                     make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
                     run = paragraph.add_run("")
+                    inline_shape=run.add_picture("bar.png",width=Inches(7.0))
+                    inline_shape.height = Cm(8.06) 
+                    inline_shape.width = Cm(14.5)
                     run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
                     document.add_paragraph("   ")
                 if i["type"]=="折线":
@@ -424,9 +427,11 @@ class pdfcreator:#pdf生成器
                     c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
                     make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
                     run = paragraph.add_run("")
-                    run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
+                    inline_shape=run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
+                    inline_shape.height = Cm(8.06) 
+                    inline_shape.width = Cm(14.5)
                     document.add_paragraph("   ")
                 if i["type"]=="饼状":
                     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
@@ -435,9 +440,11 @@ class pdfcreator:#pdf生成器
                     c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
                     make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
                     paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT    
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER   
                     run = paragraph.add_run("")
-                    run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
+                    inline_shape=run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
+                    inline_shape.height = Cm(8.06) 
+                    inline_shape.width = Cm(14.5)
                     document.add_paragraph("   ")
         document.save(self.path+str(self.id)+".docx")
     
@@ -603,6 +610,108 @@ def author(list,type):
     db.endconn() 
     return output
 
+def pic1(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db.myexecu("SELECT relevant_sig,word_pairs, trigger_rules,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[3]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="word_pairs",y_axis=Y)
+    Yy=[]
+    for i in db.data:
+        Yy.append(i[2])
+    c.add_yaxis( series_name="trigger_rules",y_axis=Yy)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="各比对结果总体情况",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))     
+    return c.dump_options_with_quotes()     
+    
+
+def pic2(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db.myexecu("SELECT  relevant_sig,direct_substitution,hyponym_hypernym,numeric_range,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[4]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="direct_substitution",y_axis=Y)
+    Yy=[]
+    for i in db.data:
+        Yy.append(i[2])
+    c.add_yaxis( series_name="hyponym_hypernym",y_axis=Yy)
+    Xx=[]
+    for i in db.data:
+        Xx.append(i[3])
+    c.add_yaxis( series_name="numeric_range",y_axis=Xx)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="各比对结果规则类型",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))     
+    return c.dump_options_with_quotes()
+
+def pic3(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db.myexecu("SELECT  relevant_sig,destroy,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[2]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="destroy",y_axis=Y)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="各比对结果疑似新颖性风险点",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))     
+    return c.dump_options_with_quotes() 
+    
+def pic4(id):
+    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db.myexecu("SELECT sum(direct_substitution),sum( hyponym_hypernym),sum( numeric_range) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    result=[]
+    result.append(["direct_substitution_sum",db.data[0][0]]) 
+    result.append(["hyponym_hypernym_sum",db.data[0][1]])
+    result.append(["numeric_range_sum",db.data[0][2]])    
+    c.add("",result) 
+    c.set_global_opts(title_opts=opts.TitleOpts(title="规则相关点各类型占比",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))            
+    return c.dump_options_with_quotes()
+    
+def pic5(id):
+    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db.myexecu("SELECT sum(destroy),sum(trigger_rules) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    result=[]
+    result.append(["destroy_sum",db.data[0][0]]) 
+    result.append(["others",db.data[0][1]-db.data[0][0]])   
+    c.add("",result) 
+    c.set_global_opts(title_opts=opts.TitleOpts(title="新颖性风险点占⽐",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+    return c.dump_options_with_quotes()
+    
+def novelty_stats(id):
+    output=[]
+    output.append(pic1(id))
+    output.append(pic2(id))
+    output.append(pic3(id))
+    output.append(pic4(id))
+    output.append(pic5(id))
+    return output
+        
+    
+    
+   
+        
+    
+
+
 # #趋势分析
 def trend(list,type):
     db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
@@ -657,6 +766,8 @@ def pdf_output(id):#输出pdf
     db.endconn()
     print("报告生成完毕")
     return  
+
+
 
 
 
