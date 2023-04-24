@@ -752,7 +752,7 @@ def timesql(list):#置信区间计算SQL语句
 
 # #申请人分析
 def author(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]    
     sqls=authorsql(list)
     db.myexecu(sqls)
@@ -771,7 +771,7 @@ def pic1(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT relevant_sig,word_pairs, trigger_rules,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[3]))
@@ -792,7 +792,7 @@ def pic2(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT  relevant_sig,direct_substitution,hyponym_hypernym,numeric_range,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[4]))
@@ -816,7 +816,7 @@ def pic3(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT  relevant_sig,destroy,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[2]))
@@ -830,7 +830,7 @@ def pic3(id):
     
 def pic4(id):
     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT sum(direct_substitution),sum( hyponym_hypernym),sum( numeric_range) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     result=[]
     result.append(["概念直接替换",db.data[0][0]]) 
@@ -843,7 +843,7 @@ def pic4(id):
     
 def pic5(id):
     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT sum(destroy),sum(trigger_rules) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     result=[]
     result.append(["新颖性风险点",db.data[0][0]]) 
@@ -864,7 +864,7 @@ def novelty_stats_draw(id):
 
 # #趋势分析
 def trend(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     sqls=timesql(list)
     db.myexecu(sqls)
     timeblock=timecal(db.data)
@@ -886,7 +886,7 @@ def trend(list,type):
   
 # #地域分析
 def area(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]
     sqls=areasql(list)
     db.myexecu(sqls)
@@ -908,7 +908,7 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     return trend(patentIds,figType)
 
 def pdf_output(id):#输出pdf
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     mypdf=pdfcreator(id,db)
     mypdf.finalword()
     output=mypdf.pdfcreate()
