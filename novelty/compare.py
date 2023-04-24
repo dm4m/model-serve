@@ -31,8 +31,8 @@ class Comparator:
         self.statistical_dict['numeric_range'] = 0
         self.statistical_dict['destroy'] = 0
 
-        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
-        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+        # print(f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}\n待申请专利权利要求：{sovereign_sentence_2}\n审查意见：')
+        print(f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利权利要求：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
 
         # statistical_dict = {}
         # statistical_dict['word_pairs'] = 0
@@ -50,8 +50,8 @@ class Comparator:
 
         review_flag = 0
         review_opinion = '\n规则判断：\n'
-        # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项："{sovereign_sentence_2}"\n审查意见：\n'
-        # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
+        # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}\n待申请专利权利要求："{sovereign_sentence_2}"\n审查意见：\n'
+        # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利权利要求："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
 
         # 词比较
         # a = time.time()
@@ -88,7 +88,7 @@ class Comparator:
         return relations_chinese
 
 
-    # 两句主权项对比word-level高亮显示
+    # 两句权利要求对比word-level高亮显示
     def wordlevel_point(self, review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2):
         # a = time.time()
 
@@ -637,11 +637,11 @@ def  highlight(sentence):
             elif idx+1<len(doc['tok/fine']) and doc['pos/pku'][idx+1]=='n' and doc['tok/fine'][idx+1] not in ['权利要求']:
                 ner_feature.append([doc['tok/fine'][idx+1], ner])
 
-    print(f"主权项：{sentence}")
+    print(f"权利要求：{sentence}")
     print("sdp_feature:", sdp_feature) if sdp_feature!=[] else None # [['铜', 'Matl']]
     print("srl_feature:", srl_feature) if srl_feature!=[] else None # ['添加剂', 'N-甲基-4-硝基苯胺、三-（2-氯乙基）磷酸酯、邻苯二酚中任意一种']
     print('ner_feature:', ner_feature) if ner_feature!=[] else None # [['铜', ('30', 'WEIGHT', 3, 4)], ['铝', ('60g', 'LENGTH', 7, 8)]]
-    # review = f"主权项：{sentence}\n"
+    # review = f"权利要求：{sentence}\n"
     # review = review + f"{sdp_feature}\n" if sdp_feature != [] else None
     # review = review + f"{srl_feature}\n" if srl_feature != [] else None
     # review = review + str(f"{ner_feature}\n") if ner_feature != [] else None

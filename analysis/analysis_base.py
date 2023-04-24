@@ -547,7 +547,9 @@ class pdfcreator:#pdf生成器
         
         self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)     
         p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")                    
-        document.save(self.path+str(self.id)+".docx")
+        self.db.myexecu("SELECT report_id,report_name from patent.report2generate where report_id= "+str(self.id))
+        self.name=self.db.data[0][1]
+        document.save(self.path+str(self.name)+".docx")
     
     def addsearchresult(self):#专利检索内容增加
         tabledata=[]
@@ -695,8 +697,8 @@ class pdfcreator:#pdf生成器
   
     
     def pdfcreate(self):#生成最后的PDF
-        generate_pdf(self.path+str(self.id)+".docx", self.path)
-        return self.path+str(self.id)+".pdf"
+        generate_pdf(self.path+str(self.name)+".docx", self.path)
+        return self.path+str(self.name)+".pdf"
 
 
 
