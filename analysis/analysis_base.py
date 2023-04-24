@@ -696,7 +696,7 @@ def pic5(id):
     c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
     return c.dump_options_with_quotes()
     
-def novelty_stats(id):
+def novelty_stats_draw(id):
     output=[]
     output.append(pic1(id))
     output.append(pic2(id))
@@ -704,13 +704,6 @@ def novelty_stats(id):
     output.append(pic4(id))
     output.append(pic5(id))
     return output
-        
-    
-    
-   
-        
-    
-
 
 # #趋势分析
 def trend(list,type):
