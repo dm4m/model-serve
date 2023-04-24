@@ -725,8 +725,8 @@ def novelty_compare(main_sig, com_sig):
 
     # review_opinion = ''
     a = time.time()
-    patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
-    patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
+    patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
+    patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
     b = time.time()
     print("抽取三元组时间：", b-a)
     comparator = Comparator()
