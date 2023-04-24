@@ -528,7 +528,6 @@ class pdfcreator:#pdf生成器
         ji+=1
         document.add_paragraph(" ")
         aa=document.add_paragraph(npagenum[ji]+"小结") 
-        aa=document.add_paragraph("小结") 
         aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
         aa.runs[0].font.size = Pt(16)
         aa.runs[0].font.name = '黑体'
@@ -546,8 +545,8 @@ class pdfcreator:#pdf生成器
         idstr=idstr[0:-1]
         idstr+=")"
         
-        self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)     
-        p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,新颖性⻛险点"+str(self.db.data[0][4])+"条")                    
+        self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)     
+        p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")                    
         document.save(self.path+str(self.id)+".docx")
     
     def addsearchresult(self):#专利检索内容增加
