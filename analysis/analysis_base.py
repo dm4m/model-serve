@@ -284,6 +284,7 @@ class pdfcreator:#pdf生成器
         jiannum=0
         snum=[]
         nnum=[]
+        numa=0
         a=1
         pagenum={1:"一、",2:"二、",3:"三、"}      
         document = Document()
