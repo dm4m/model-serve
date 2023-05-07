@@ -589,9 +589,9 @@ class pdfcreator:#pdf生成器
     def addpicresult(self,id):#图片内容
         outresult=[]
         tabledata=[]
-        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where analysis_collection_id="+str(id))
+        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where stats_res_id="+str(id))
         mystr=str(self.db.data)
-        mystr=mystr[2:-3]        
+        mystr=mystr[2:-3]
         self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(mystr))
         for i in self.db.data:
             myjson=json.loads(str(i[0]))
