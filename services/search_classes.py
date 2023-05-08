@@ -60,4 +60,6 @@ def rerank(query_vec,last_embed):
         doc_score[docs["doc_id"]] = sum(mul_res)
     order = sorted(doc_score.items(),key=lambda d:d[1], reverse=True)
     order_list = [i[0] for i in order]
-    return order_list[0:100]
+    # 修改部分，返回值新增整篇专利的得分
+    order_score_list = [i[1] for i in order]
+    return order_list[0:100],order_score_list[0:100]
