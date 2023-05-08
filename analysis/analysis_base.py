@@ -275,10 +275,16 @@ class pdfcreator:#pdf生成器
         with open(yaml_path,"r",encoding="utf-8") as f:
             data=yaml.load(f,Loader=yaml.FullLoader)
         self.path=data['pdf-output-path']
+        self.searchnum=0
+        self.newnum=0
 
         
     
     def finalword(self):#生成最终的word  
+        jiannum=0
+        snum=[]
+        nnum=[]
+        numa=0
         a=1
         pagenum={1:"一、",2:"二、",3:"三、"}      
         document = Document()
@@ -302,36 +308,49 @@ class pdfcreator:#pdf生成器
         p.runs[0].font.name = '黑体'
         p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
         if(len(self.addsearchresult())!=0):
-            pp=document.add_paragraph(pagenum[a]+"专利检索结果") 
+            pp=document.add_paragraph(pagenum[a]+"专利检索结果及分析") 
             pp.alignment = WD_ALIGN_PARAGRAPH.LEFT
             pp.runs[0].font.size = Pt(12)
             pp.runs[0].font.name = '宋体'
             pp.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             a+=1
         if(len(self.addnovelresult())!=0):
-            aa=document.add_paragraph(pagenum[a]+"新颖性分析结果") 
+            aa=document.add_paragraph(pagenum[a]+"新颖性比对结果及分析") 
             aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
             aa.runs[0].font.size = Pt(12)
             aa.runs[0].font.name = '宋体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   
             a+=1
-        if(len(self.addpicresult())!=0):
-            bb=document.add_paragraph(pagenum[a]+"统计分析结果") 
-            bb.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            bb.runs[0].font.size = Pt(12)
-            bb.runs[0].font.name = '宋体'
-            bb.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   
-            a+=1
+        bb=document.add_paragraph(pagenum[a]+"小结") 
+        bb.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        bb.runs[0].font.size = Pt(12)
+        bb.runs[0].font.name = '宋体'
+        bb.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   
+        a+=1                
         document.paragraphs[a].runs[0].add_break(docx.enum.text.WD_BREAK.PAGE)
         ji=1
         npagenum={1:"一、",2:"二、",3:"三、"}
         if(len(self.addsearchresult())!=0):
-            aa=document.add_paragraph(npagenum[ji]+"专利检索结果") 
+            for i in self.data:            
+                if i[0]=="检索结果":
+                    snum.append(i[1])                    
+            aa=document.add_paragraph(npagenum[ji]+"专利检索结果及分析") 
             aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
             aa.runs[0].font.size = Pt(16)
             aa.runs[0].font.name = '黑体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
             for a in self.addsearchresult():
+                self.searchnum+=1
+                aa=document.add_paragraph(str(self.searchnum)+"、检索结果集"+str(self.searchnum)+":") 
+                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                aa.runs[0].font.size = Pt(13)
+                aa.runs[0].font.name = '黑体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                aa=document.add_paragraph("(1)检索结果内容") 
+                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                aa.runs[0].font.size = Pt(10)
+                aa.runs[0].font.name = '黑体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')                  
                 table = document.add_table(rows=1, cols=3,style='TableGrid')
                 cells = table.add_row().cells
                 cells[0].text = '标题'
@@ -343,22 +362,91 @@ class pdfcreator:#pdf生成器
                     cell._tc.get_or_add_tcPr().append(shading_elm)
                 for b in a:
                     for c in b:
+                        jiannum+=1
                         document.styles['Normal'].font.name = u'宋体'
                         document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
                         cells = table.add_row().cells
                         cells[0].text=c[0]
                         cells[1].text=c[1]
                         cells[2].text=c[2]
+                document.add_paragraph(" ") 
+                if len(self.addpicresult(snum[self.searchnum-1]))!=0:
+                    aa=document.add_paragraph("(2)统计分析结果") 
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(10)
+                    aa.runs[0].font.name = '黑体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    for i in self.addpicresult(snum[self.searchnum-1]):
+                        if i["type"]=="柱状":
+                            c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                            c.add_xaxis(i["xaxis"]) 
+                            if len(i["data"])==1: 
+                                (key, value), = i["data"].items()
+                                c.add_yaxis( series_name=key,y_axis=value)
+                            else:          
+                                for key,value in i["data"].items():  
+                                    c.add_yaxis( series_name=key,y_axis=value)
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
+                            run = paragraph.add_run("")
+                            inline_shape=run.add_picture("bar.png",width=Inches(7.0))
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)
+                            run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
+                        if i["type"]=="折线":
+                            c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
+                            c.add_xaxis(i["xaxis"])
+                            if len(i["data"])==1: 
+                                (key, value), = i["data"].items()
+                                c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                            else:          
+                                for key,value in i["data"].items():  
+                                    c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
+                            run = paragraph.add_run("")
+                            inline_shape=run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))                         
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)
+                        if i["type"]=="饼状":
+                            c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                            c.add("",i["data"]) 
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER   
+                            run = paragraph.add_run("")
+                            inline_shape=run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)              
             ji+=1  
-            document.add_paragraph(" ")      
+            document.add_paragraph(" ")     
         if(len(self.addnovelresult())!=0):
+            for i in self.data:            
+                if i[0]=="新颖性比对结果":
+                    nnum.append(i[1])
             numa=1           
-            aa=document.add_paragraph(npagenum[ji]+"新颖性分析结果") 
-            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            aa=document.add_paragraph(npagenum[ji]+"新颖性比对结果及分析") 
+            aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
             aa.runs[0].font.size = Pt(16)
             aa.runs[0].font.name = '黑体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')           
             for a in self.addnovelresult():
+                aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":") 
+                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                aa.runs[0].font.size = Pt(13)
+                aa.runs[0].font.name = '黑体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                aa=document.add_paragraph("(1)新颖性比对结果") 
+                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                aa.runs[0].font.size = Pt(10)
+                aa.runs[0].font.name = '黑体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')  
                 p=document.add_paragraph()
                 for b in a:
                     (key, value), = b.items()
@@ -386,68 +474,94 @@ class pdfcreator:#pdf生成器
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                             p.add_run(key)                    
                             p.add_run(value)
-
-            ji+=1
-            document.add_paragraph(" ")
-        if(len(self.addpicresult())!=0):
-            aa=document.add_paragraph(npagenum[ji]+"统计分析结果") 
-            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            aa.runs[0].font.size = Pt(16)
-            aa.runs[0].font.name = '黑体'
-            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')   
-            for i in self.addpicresult():
-                if i["type"]=="柱状":
-                    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-                    c.add_xaxis(i["xaxis"]) 
-                    if len(i["data"])==1: 
-                        (key, value), = i["data"].items()
-                        c.add_yaxis( series_name=key,y_axis=value)
-                    else:          
-                        for key,value in i["data"].items():  
-                            c.add_yaxis( series_name=key,y_axis=value)
-                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
-                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
-                    paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
-                    run = paragraph.add_run("")
-                    run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
-                    document.add_paragraph("   ")
-                if i["type"]=="折线":
-                    c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
-                    c.add_xaxis(i["xaxis"])
-                    if len(i["data"])==1: 
-                        (key, value), = i["data"].items()
-                        c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
-                    else:          
-                        for key,value in i["data"].items():  
-                            c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
-                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
-                    paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT     
-                    run = paragraph.add_run("")
-                    run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
-                    document.add_paragraph("   ")
-                if i["type"]=="饼状":
-                    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-                    c.add("",i["data"]) 
-                    c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
-                    make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
-                    paragraph=document.add_paragraph()
-                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT    
-                    run = paragraph.add_run("")
-                    run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
-                    document.add_paragraph("   ")
-        document.save(self.path+str(self.id)+".docx")
+                if(len(self.addnewpicresult(nnum[numa-2]))!=0): 
+                    for i in self.addnewpicresult((nnum[numa-2])):
+                        if i["type"]=="柱状":
+                            c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                            c.add_xaxis(i["xaxis"]) 
+                            if len(i["data"])==1: 
+                                (key, value), = i["data"].items()
+                                c.add_yaxis( series_name=key,y_axis=value)
+                            else:          
+                                for key,value in i["data"].items():  
+                                    c.add_yaxis( series_name=key,y_axis=value)
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom")) 
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
+                            run = paragraph.add_run("")
+                            inline_shape= run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)
+                            document.add_paragraph("   ")
+                        if i["type"]=="折线":
+                            c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))      
+                            c.add_xaxis(i["xaxis"])
+                            if len(i["data"])==1: 
+                                (key, value), = i["data"].items()
+                                c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                            else:          
+                                for key,value in i["data"].items():  
+                                    c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER     
+                            run = paragraph.add_run("")
+                            inline_shape=run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)
+                            document.add_paragraph("   ")
+                        if i["type"]=="饼状":
+                            c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                            c.add("",i["data"]) 
+                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
+                            paragraph=document.add_paragraph()
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER   
+                            run = paragraph.add_run("")
+                            inline_shape=run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
+                            inline_shape.height = Cm(8.06) 
+                            inline_shape.width = Cm(14.5)
+                            document.add_paragraph("   ")
+        
+        ji+=1
+        document.add_paragraph(" ")
+        aa=document.add_paragraph(npagenum[ji]+"小结") 
+        aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        aa.runs[0].font.size = Pt(16)
+        aa.runs[0].font.name = '黑体'
+        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体') 
+        p=document.add_paragraph()
+        p.style.font.name = '宋体'
+        p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
+        result=[]
+        result.append(self.searchnum)
+        result.append(jiannum)
+        result.append(numa)
+        idstr="("
+        for i in nnum:
+            idstr+=str(i)+","
+        idstr=idstr[0:-1]
+        idstr+=")"
+        if len(nnum)==0:   
+            p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词0对,新颖性评判规则相关点0条,其中涉及上下位概念相关点0条,惯⽤⼿段直接置换0条,数字范围相关点0条,新颖性⻛险点0条。")  
+        else:
+            self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)    
+            p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")                                       
+        self.db.myexecu("SELECT report_id,report_name from patent.report2generate where report_id= "+str(self.id))
+        self.name=self.db.data[0][1]
+        document.save(self.path+str(self.name)+".docx")
     
     def addsearchresult(self):#专利检索内容增加
         tabledata=[]
         mydata=[]
+        self.searchid=[]
         for i in self.data:            
             if i[0]=="检索结果":
                 updata=[]
-                self.db.myexecu("SELECT patent_id FROM patent.search_result_item where search_result_id="+str(i[1]))
+                self.db.myexecu("SELECT patent_id FROM patent.analysis_collection_item where collection_id="+str(i[1]))
                 for a in self.db.data:
                     mydata.append(a[0])
                 for a in mydata:
@@ -475,64 +589,119 @@ class pdfcreator:#pdf生成器
                 mydata.append(updata)
         return mydata
     
-    def addpicresult(self):#图片内容
+    def addpicresult(self,id):#图片内容
         outresult=[]
         tabledata=[]
-        for i in self.data:
-            if i[0]=="统计分析结果":
-                self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(i[1]))
-                myjson=json.loads(str(self.db.data[0])[2:-3])
-                mytitle=myjson["title"][0]["text"]
-                type=mytitle[-3:-1]
-                if type=="柱状":
-                    barresult={}
-                    barresult["type"]="柱状"
-                    barresult["title"]=mytitle
-                    time=[]
-                    for a in myjson["xAxis"][0]["data"]:
-                        time.append(a)
-                    barresult["xaxis"]=time
-                    mydata={}
-                    for a in myjson["series"]:
-                        mydata[a["name"]]=a["data"]
-                    barresult["data"]=mydata
-                    outresult.append(barresult)
-                if type=="折线":
-                    barresult={}
-                    barresult["type"]="折线"
-                    barresult["title"]=mytitle
-                    time=[]
-                    for a in myjson["xAxis"][0]["data"]:
-                        time.append(a)
-                    barresult["xaxis"]=time
-                    mydata={}
-                    for a in myjson["series"]:
-                        updata=[]
-                        for b in a["data"]:
-                            updata.append(b[1])
-                        mydata[a["name"]]=updata
-                    barresult["data"]=mydata
-                    outresult.append(barresult)
-                if type=="饼状":
-                    barresult={}
-                    barresult["type"]="饼状"
-                    barresult["title"]=mytitle
-                    time=[]
-                    mydata=[]
-                    a = myjson["series"][0]["data"]
-                    for b in a:
-                        mydata.append([b["name"],b["value"]])
-
-                    barresult["data"]=mydata
-                    outresult.append(barresult)
+        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where stats_res_id="+str(id))
+        mystr=str(self.db.data)
+        mystr=mystr[2:-3]
+        self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(mystr))
+        for i in self.db.data:
+            myjson=json.loads(str(i[0]))
+            mytitle=myjson["title"][0]["text"]
+            type=mytitle[-3:-1]
+            if type=="柱状":
+                barresult={}
+                barresult["type"]="柱状"
+                barresult["title"]=mytitle
+                time=[]
+                for a in myjson["xAxis"][0]["data"]:
+                    time.append(a)
+                barresult["xaxis"]=time
+                mydata={}
+                for a in myjson["series"]:
+                    mydata[a["name"]]=a["data"]
+                barresult["data"]=mydata
+                outresult.append(barresult)
+            if type=="折线":
+                barresult={}
+                barresult["type"]="折线"
+                barresult["title"]=mytitle
+                time=[]
+                for a in myjson["xAxis"][0]["data"]:
+                    time.append(a)
+                barresult["xaxis"]=time
+                mydata={}
+                for a in myjson["series"]:
+                    updata=[]
+                    for b in a["data"]:
+                        updata.append(b[1])
+                    mydata[a["name"]]=updata
+                barresult["data"]=mydata
+                outresult.append(barresult)
+            if type=="饼状":
+                barresult={}
+                barresult["type"]="饼状"
+                barresult["title"]=mytitle
+                time=[]
+                mydata=[]
+                a = myjson["series"][0]["data"]
+                for b in a:
+                    mydata.append([b["name"],b["value"]])
+                barresult["data"]=mydata
+                outresult.append(barresult)
         return outresult
         
+        
+
+    def addnewpicresult(self,id):#图片内容
+        outresult=[]
+        tabledata=[]   
+        self.db.myexecu("SELECT id FROM patent.novelty_stats_result where novelty_ana_result_id="+str(id))
+        mystr=str(self.db.data)
+        mystr=mystr[2:-3]
+        self.db.myexecu("SELECT option_json FROM patent.novelty_stats_item where novelty_stats_id="+mystr)
+        for i in self.db.data:
+            myjson=json.loads(str(i[0]))
+            mytitle=myjson["title"][0]["text"]
+            if mytitle=="各比对结果相关词和规则相关点数量" or mytitle=="规则相关点各类型数量" or mytitle=="各比对结果疑似新颖性风险点":
+                barresult={}
+                barresult["type"]="柱状"
+                barresult["title"]=mytitle
+                time=[]
+                for a in myjson["xAxis"][0]["data"]:
+                    time.append(a)
+                barresult["xaxis"]=time
+                mydata={}
+                for a in myjson["series"]:
+                    mydata[a["name"]]=a["data"]
+                barresult["data"]=mydata
+                outresult.append(barresult)
+            if type=="折线":
+                barresult={}
+                barresult["type"]="折线"
+                barresult["title"]=mytitle
+                time=[]
+                for a in myjson["xAxis"][0]["data"]:
+                    time.append(a)
+                barresult["xaxis"]=time
+                mydata={}
+                for a in myjson["series"]:
+                    updata=[]
+                    for b in a["data"]:
+                        updata.append(b[1])
+                    mydata[a["name"]]=updata
+                barresult["data"]=mydata
+                outresult.append(barresult)
+            if mytitle=="全部规则相关点各类型占比" or mytitle=="全部规则相关点中新颖性风险点占比":
+                barresult={}
+                barresult["type"]="饼状"
+                barresult["title"]=mytitle
+                time=[]
+                mydata=[]
+                a = myjson["series"][0]["data"]
+                for b in a:
+                    mydata.append([b["name"],b["value"]])
+
+                barresult["data"]=mydata
+                outresult.append(barresult)
+        return outresult
 
   
     
     def pdfcreate(self):#生成最后的PDF
-        generate_pdf(self.path+str(self.id)+".docx", self.path)
-        return self.path+str(self.id)+".pdf"
+        generate_pdf(self.path+str(self.name)+".docx", self.path)
+        return self.path+str(self.name)+".pdf"
 
 
 
@@ -588,7 +757,7 @@ def timesql(list):#置信区间计算SQL语句
 
 # #申请人分析
 def author(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]    
     sqls=authorsql(list)
     db.myexecu(sqls)
@@ -603,9 +772,104 @@ def author(list,type):
     db.endconn() 
     return output
 
+def pic1(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
+    db.myexecu("SELECT relevant_sig,word_pairs, trigger_rules,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[3]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="相关词",y_axis=Y)
+    Yy=[]
+    for i in db.data:
+        Yy.append(i[2])
+    c.add_yaxis( series_name="规则相关点",y_axis=Yy)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="各比对结果相关词和规则相关点数量",pos_left="center", pos_top="top"),legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))   
+    return c.dump_options_with_quotes()     
+    
+
+def pic2(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
+    db.myexecu("SELECT  relevant_sig,direct_substitution,hyponym_hypernym,numeric_range,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[4]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="概念直接替换",y_axis=Y)
+    Yy=[]
+    for i in db.data:
+        Yy.append(i[2])
+    c.add_yaxis( series_name="上下位关系",y_axis=Yy)
+    Xx=[]
+    for i in db.data:
+        Xx.append(i[3])
+    c.add_yaxis( series_name="数字范围",y_axis=Xx)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="规则相关点各类型数量",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))     
+    return c.dump_options_with_quotes()
+
+def pic3(id):
+    c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    xlist=[]
+    a=0
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
+    db.myexecu("SELECT  relevant_sig,destroy,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    for i in db.data:
+        xlist.append("权利"+str(i[2]))
+    Y=[]
+    c.add_xaxis(xlist) 
+    for i in db.data:
+        Y.append(i[1])
+    c.add_yaxis( series_name="新颖性风险点",y_axis=Y)
+    c.set_global_opts(title_opts=opts.TitleOpts(title="各比对结果疑似新颖性风险点",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))     
+    return c.dump_options_with_quotes() 
+    
+def pic4(id):
+    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
+    db.myexecu("SELECT sum(direct_substitution),sum( hyponym_hypernym),sum( numeric_range) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    result=[]
+    result.append(["概念直接替换",db.data[0][0]]) 
+    result.append(["上下位关系",db.data[0][1]])
+    result.append(["数字范围",db.data[0][2]])    
+    c.add("",result) 
+    c.set_global_opts(title_opts=opts.TitleOpts(title="全部规则相关点中各类型占比",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))            
+    return c.dump_options_with_quotes()
+    
+def pic5(id):
+    c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
+    db.myexecu("SELECT sum(destroy),sum(trigger_rules) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
+    result=[]
+    result.append(["新颖性风险点",db.data[0][0]]) 
+    result.append(["非风险点",db.data[0][1]-db.data[0][0]])   
+    c.add("",result) 
+    c.set_global_opts(title_opts=opts.TitleOpts(title="全部规则相关点中新颖性风险点占比",pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='scroll',pos_top="bottom"))
+    c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
+    return c.dump_options_with_quotes()
+    
+def novelty_stats_draw(id):
+    output=[]
+    output.append(pic1(id))
+    output.append(pic2(id))
+    output.append(pic3(id))
+    output.append(pic4(id))
+    output.append(pic5(id))
+    return output
+
 # #趋势分析
 def trend(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     sqls=timesql(list)
     db.myexecu(sqls)
     timeblock=timecal(db.data)
@@ -627,7 +891,7 @@ def trend(list,type):
   
 # #地域分析
 def area(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]
     sqls=areasql(list)
     db.myexecu(sqls)
@@ -649,7 +913,7 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     return trend(patentIds,figType)
 
 def pdf_output(id):#输出pdf
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     mypdf=pdfcreator(id,db)
     mypdf.finalword()
     output=mypdf.pdfcreate()
@@ -657,6 +921,14 @@ def pdf_output(id):#输出pdf
     db.endconn()
     print("报告生成完毕")
     return  
+
+
+
+
+
+
+
+
 
 
 

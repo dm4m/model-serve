@@ -10,18 +10,37 @@ from .triple_extraction import *
 import OpenHowNet
 import difflib
 import os
+import string
 
 import multiprocessing
 import time
 
 class Comparator:
     def __init__(self) -> None:
+
         pass
+
 
     def sovereign_compare(self, extractor, sovereign_sentence_1, sovereign_triples_1, sovereign_sentence_2, sovereign_triples_2):
 
-        # print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项：{sovereign_sentence_2}\n审查意见：')
-        print(f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+        self.statistical_dict = {}
+        self.statistical_dict['word_pairs'] = 0
+        self.statistical_dict['trigger_rules'] = 0
+        self.statistical_dict['direct_substitution'] = 0
+        self.statistical_dict['hyponym_hypernym'] = 0
+        self.statistical_dict['numeric_range'] = 0
+        self.statistical_dict['destroy'] = 0
+
+        # print(f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}\n待申请专利权利要求：{sovereign_sentence_2}\n审查意见：')
+        print(f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利权利要求：{sovereign_sentence_2}, triple_2：{sovereign_triples_2}\n审查意见：')
+
+        # statistical_dict = {}
+        # statistical_dict['word_pairs'] = 0
+        # statistical_dict['trigger_rules'] = 0
+        # statistical_dict['direct_substitution'] = 0
+        # statistical_dict['hyponym_hypernym'] = 0
+        # statistical_dict['numeric_range'] = 0
+        # statistical_dict['destroy'] = 0
 
         x = time.time()
         sovereign_triples_1_substitution_words, triples_copy_1 = self.substitution_words_for_direct_substitution(sovereign_triples_1)
@@ -31,8 +50,8 @@ class Comparator:
 
         review_flag = 0
         review_opinion = '\n规则判断：\n'
-        # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}\n待申请专利主权项："{sovereign_sentence_2}"\n审查意见：\n'
-        # review_opinion = f'\n待比较内容：\n对比专利主权项：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利主权项："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
+        # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}\n待申请专利权利要求："{sovereign_sentence_2}"\n审查意见：\n'
+        # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利权利要求："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
 
         # 词比较
         # a = time.time()
@@ -60,7 +79,7 @@ class Comparator:
             print('暂未触发相关规则。')
             review_opinion += '\t暂未触发相关规则。\n'
         
-        return review_opinion, words_info, words_info_str
+        return self.statistical_dict, review_opinion, words_info, words_info_str
 
     def relations_translation(self, relations):
         relations_chinese = []
@@ -69,7 +88,7 @@ class Comparator:
         return relations_chinese
 
 
-    # 两句主权项对比word-level高亮显示
+    # 两句权利要求对比word-level高亮显示
     def wordlevel_point(self, review_flag, review_opinion, sovereign_sentence_1, sovereign_sentence_2):
         # a = time.time()
 
@@ -112,6 +131,7 @@ class Comparator:
                 if pos_2[idx] == 'n' and [word_1, word_2] not in word_pairs and relation != []:
                     word_pairs.append([word_1, word_2])
                     info_set.append([word_1, word_2, self.relations_translation(relation)])
+                    self.statistical_dict['word_pairs'] += 1
 
         info_set_copy = info_set.copy()
         for idx, info in enumerate(info_set_copy):
@@ -168,14 +188,12 @@ class Comparator:
         sovereign_triples_substitution_words = []
         triples_copy = sovereign_triples.copy()
         for idx, triple in enumerate(sovereign_triples):
-
             for i in [0, 2]:
                 words, postags = parser.words_postags(HanLP, triple[i])
                 triples_copy[idx][i] = ''
                 for j in range(len(words)):
                     if postags[j] != 'p':  # 删除介词
                         triples_copy[idx][i] += words[j]
-
             sovereign_triples_substitution_words.append(self.substitution_words(bu, triples_copy[idx], 1))
         return sovereign_triples_substitution_words, triples_copy
 
@@ -223,12 +241,25 @@ class Comparator:
 
         # threshold = 0.4
         # if difflib.SequenceMatcher(None, triple_1[1], triple_2[1]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[0]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[0], triple_2[2]).quick_ratio()>=threshold and difflib.SequenceMatcher(None, triple_1[2], triple_2[0]).quick_ratio()>=threshold:
-        if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
-            print(f"可能涉及惯用手段的直接置换：\n对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。")
-            review_flag += 1
-            review_opinion += f"\n\t可能涉及惯用手段的直接置换：\n\t对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。\n"
 
-        return review_flag, review_opinion
+        # 判断字符c是否为标点符号
+        def is_punctuation(c):
+            if len(c)==1:
+                return c in string.punctuation
+            else:
+                return False
+
+        if is_punctuation(triple_copy_1[0]) or is_punctuation(triple_copy_1[2]) or is_punctuation(triple_copy_2[0]) or is_punctuation(triple_copy_2[2]):
+            return review_flag, review_opinion
+        else:
+            if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
+                self.statistical_dict['trigger_rules'] += 1
+                self.statistical_dict['direct_substitution'] += 1
+                self.statistical_dict['destroy'] += 1
+                print(f"可能涉及惯用手段的直接置换：\n对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。")
+                review_flag += 1
+                review_opinion += f"\n\t可能涉及惯用手段的直接置换：\n\t对比专利三元组{triple_1} 和 待申请专利三元组{triple_2}，可能影响待申请专利的新颖性。\n"
+            return review_flag, review_opinion
 
     # 具体(下位) 概念与一般(上位) 概念
     def hyponym_hypernym_compare(self, review_flag, review_opinion, triple_1, triple_2):
@@ -263,13 +294,18 @@ class Comparator:
         review_flag_temp = review_flag
         for i in range(1,len(relation_list)):
             if 'hyponym' in relation_list[i][2]:
+                self.statistical_dict['trigger_rules'] += 1
+                self.statistical_dict['hyponym_hypernym'] += 1
                 print(f"涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。")
                 review_flag += 1
                 review_opinion += f"\n\t涉及上下位概念的比较：\n\t对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为上位-下位概念，不影响新颖性。\n"
             if 'hypernym' in relation_list[i][2]:
-                print(f"涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。")
+                self.statistical_dict['trigger_rules'] += 1
+                self.statistical_dict['hyponym_hypernym'] += 1
+                self.statistical_dict['destroy'] += 1
+                print(f"涉及上下位概念的比较：\n对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利可能不具有新颖性。")
                 review_flag += 1
-                review_opinion += f"\n\t涉及上下位概念的比较：\n\t对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利的可能不具有新颖性。\n"
+                review_opinion += f"\n\t涉及上下位概念的比较：\n\t对比专利三元组{triple_copy_1} 和 待申请专利三元组{triple_copy_2}：{relation_list[i][0]}、{relation_list[i][1]}为下位-上位概念，待申请专利可能不具有新颖性。\n"
 
         # if review_flag == review_flag_temp:
         #     # t1_e1_hypernym = bu.hypernym(triple_copy_1[0]) # 上位词
@@ -495,49 +531,70 @@ class Comparator:
 
                     # 1
                     if (number_range_list_2[j][0] < number_range_list_2[j][1]) and (number_range_list_2[j][0] <= number_range_list_1[i][0] == number_range_list_1[i][1] <= number_range_list_2[j][1]):
-                        print(f"(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        self.statistical_dict['destroy'] += 1
+                        print(f"对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(1)对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t对比专利公开的数值{number_range_list_1[i][0]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
                     if (number_range_list_2[j][0] < number_range_list_2[j][1]) and (number_range_list_2[j][0] <= number_range_list_1[i][0] < number_range_list_1[i][1] <= number_range_list_2[j][1]):
-                        print(f"(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        self.statistical_dict['destroy'] += 1
+                        print(f"对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(1)对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t对比专利公开的数值范围{number_range_list_1[i]} 落在 待申请专利的数值范围{number_range_list_2[j]}内，将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 2
                     # print(f"({number_range_list_1[i][0]} < {number_range_list_1[i][1]}) and ({number_range_list_2[j][0]} < {number_range_list_2[j][1]}) and (({number_range_list_2[j][0]} <= {number_range_list_1[i][0]} <= {number_range_list_2[j][1]}) or ({number_range_list_2[j][0]} <= {number_range_list_1[i][1]} <= {number_range_list_2[j][1]}))")
                     if (number_range_list_1[i][0] < number_range_list_1[i][1]) and (number_range_list_2[j][0] < number_range_list_2[j][1]) and ((number_range_list_2[j][0] <= number_range_list_1[i][0] <= number_range_list_2[j][1]) or (number_range_list_2[j][0] <= number_range_list_1[i][1] <= number_range_list_2[j][1])):
-                        print(f"(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        self.statistical_dict['destroy'] += 1
+                        print(f"对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(2)对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t对比专利公开的数值范围{number_range_list_1[i]} 和 待申请专利的数值范围{number_range_list_2[j]}部分重叠或者有一个共同的端点，将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 3
                     if (number_range_list_1[i][0] < number_range_list_1[i][1]) and (number_range_list_2[j][0] == number_range_list_2[j][1]):
                         if number_range_list_2[j][0] == number_range_list_1[i][0] or number_range_list_2[j][0] == number_range_list_1[i][1]:
-                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。")
+                            self.statistical_dict['trigger_rules'] += 1
+                            self.statistical_dict['numeric_range'] += 1
+                            self.statistical_dict['destroy'] += 1
+                            print(f"对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。")
                             review_flag += 1
-                            review_opinion += f"\t(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。\n"
+                            review_opinion += f"\t对比专利公开的数值范围{number_range_list_1[i]}的两个端点 将破坏 待申请专利的技术特征{number_range_list_2[j][0]}为离散数值并且具有该两端点中任一个的发明或者实用新型的新颖性。\n"
                         if number_range_list_1[i][0] < number_range_list_2[j][0] < number_range_list_1[i][1]:
-                            print(f"(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。")
+                            self.statistical_dict['trigger_rules'] += 1
+                            self.statistical_dict['numeric_range'] += 1
+                            print(f"对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。")
                             review_flag += 1
-                            review_opinion += f"\t(3)对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。\n"
+                            review_opinion += f"\t对比专利公开的数值范围{number_range_list_1[i]}的两个端点 不破坏 待申请专利的技术特征{number_range_list_2[j][0]}为该两端点之间任一数值的发明或者实用新型的新颖性。\n"
 
                     # 4
                     if number_range_list_1[i][0] < number_range_list_2[j][0] < number_range_list_2[j][1] < number_range_list_1[i][1]:
-                        print(f"(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        print(f"待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(4)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}落在对比文件公开的数值范围{number_range_list_1[i]}内，并且与对比文件公开的数值范围没有共同的端点，则对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 5
                     if (number_range_list_1[i][0] == number_range_list_2[j][0]) and (number_range_list_1[i][1] == number_range_list_2[j][1]):
-                        print(f"(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        self.statistical_dict['destroy'] += 1
+                        print(f"待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(5)待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t待申请专利的技术特征的数值或者数值范围{number_range_list_2[j]}与对比文件公开的数值范围{number_range_list_1[i]}相同，则对比文件 将破坏 要求保护的发明或者实用新型的新颖性。\n"
 
                     # 6
                     if (number_range_list_1[i][0] <= number_range_list_1[i][1]) and (number_range_list_2[j][0] <= number_range_list_2[j][1]) and ((number_range_list_1[i][0] > number_range_list_2[j][1]) or (number_range_list_1[i][1] < number_range_list_2[j][0])):
-                        print(f"(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
+                        self.statistical_dict['trigger_rules'] += 1
+                        self.statistical_dict['numeric_range'] += 1
+                        print(f"待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。")
                         review_flag += 1
-                        review_opinion += f"\t(6)待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
+                        review_opinion += f"\t待申请专利的技术特征的数值或者数值范围{number_range_list_2}与对比文件公开的数值范围{number_range_list_1}不重合，对比文件 不破坏 要求保护的发明或者实用新型的新颖性。\n"
         
         return review_flag, review_opinion
 
@@ -580,11 +637,11 @@ def  highlight(sentence):
             elif idx+1<len(doc['tok/fine']) and doc['pos/pku'][idx+1]=='n' and doc['tok/fine'][idx+1] not in ['权利要求']:
                 ner_feature.append([doc['tok/fine'][idx+1], ner])
 
-    print(f"主权项：{sentence}")
+    print(f"权利要求：{sentence}")
     print("sdp_feature:", sdp_feature) if sdp_feature!=[] else None # [['铜', 'Matl']]
     print("srl_feature:", srl_feature) if srl_feature!=[] else None # ['添加剂', 'N-甲基-4-硝基苯胺、三-（2-氯乙基）磷酸酯、邻苯二酚中任意一种']
     print('ner_feature:', ner_feature) if ner_feature!=[] else None # [['铜', ('30', 'WEIGHT', 3, 4)], ['铝', ('60g', 'LENGTH', 7, 8)]]
-    # review = f"主权项：{sentence}\n"
+    # review = f"权利要求：{sentence}\n"
     # review = review + f"{sdp_feature}\n" if sdp_feature != [] else None
     # review = review + f"{srl_feature}\n" if srl_feature != [] else None
     # review = review + str(f"{ner_feature}\n") if ner_feature != [] else None
@@ -668,16 +725,26 @@ def novelty_compare(main_sig, com_sig):
 
     # review_opinion = ''
     a = time.time()
-    patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
-    patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
+    patent_1_sentences_list, patent_1_sovs_list, extractor = triple_extraction_main(HanLP, com_sig)
+    patent_2_sentences_list, patent_2_sovs_list, extractor = triple_extraction_main(HanLP, main_sig)
     b = time.time()
     print("抽取三元组时间：", b-a)
     comparator = Comparator()
     # 输出
     c = time.time()
-    review_opinion, words_info, words_info_str = comparator.sovereign_compare(extractor, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
+    statistical_dict, review_opinion, words_info, words_info_str = comparator.sovereign_compare(extractor, patent_1_sentences_list[0], patent_1_sovs_list, patent_2_sentences_list[0], patent_2_sovs_list)
     d = time.time()
     print("比较时间：", d - c)
 
+    statistical_info = f"共探测到{statistical_dict['word_pairs']}条相关关系词对；{statistical_dict['trigger_rules']}条新颖性评判规则相关点，其中数值和数值范围相关点{statistical_dict['numeric_range']}条、上下位概念相关点{statistical_dict['hyponym_hypernym']}条、惯用手段的直接置换相关点{statistical_dict['direct_substitution']}条。可能会破坏所提交发明的有{statistical_dict['destroy']}项。"
+
+
+    # statistical_dict['word_pairs'] 相关关系词对
+    # statistical_dict['trigger_rules'] 新颖性评判规则相关点
+    # statistical_dict['direct_substitution'] 惯用手段的直接置换相关点
+    # statistical_dict['hyponym_hypernym'] 上下位概念相关点
+    # statistical_dict['numeric_range'] 数值和数值范围相关点
+    # statistical_dict['destroy'] 可能会破坏所提交发明
+
     # return review_opinion, words_info, words_info_str
-    return words_info_str + review_opinion
+    return words_info_str + review_opinion, statistical_dict, statistical_info
