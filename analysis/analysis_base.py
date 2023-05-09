@@ -401,10 +401,10 @@ class pdfcreator:#pdf生成器
                 for cell in rows.cells:
                     shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
                     cell._tc.get_or_add_tcPr().append(shading_elm)
-                    # 修改bug:检索结果表格表头不在第一行
-                    table.rows[0].cells[0].text = "标题"
-                    table.rows[0].cells[1].text = "申请人列表"
-                    table.rows[0].cells[2].text = "申请时间"
+                # 修改bug:检索结果表格表头不在第一行
+                table.rows[0].cells[0].text = "标题"
+                table.rows[0].cells[1].text = "申请人列表"
+                table.rows[0].cells[2].text = "申请时间"
                 for b in a:
                     for c in b:
                         jiannum+=1
@@ -487,17 +487,12 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
-                aa=document.add_paragraph("(1)新颖性比对结果内容")
-                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                aa.runs[0].font.size = Pt(10)
-                aa.runs[0].font.name = '黑体'
-                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
                 # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
                 if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
-                    content_title = "(1)新颖性比对结果"
+                    content_title = "(1)新颖性比对结果内容"
                     aa = document.add_paragraph()
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.size = Pt(10)
                     aa.runs[0].font.name = '黑体'
                     aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
                     p = document.add_paragraph(content_title)
@@ -509,7 +504,6 @@ class pdfcreator:#pdf生成器
                     p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                     p.add_run("原权利要求：\n")
                     p.add_run(related_dic["origin_signory_text"] + "\n")
-
                     p = document.add_paragraph()
                     p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
                     self.novelty_table_design(self, document, related_dic)
@@ -630,7 +624,7 @@ class pdfcreator:#pdf生成器
                 self.db.myexecu(
                     "SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id=" + str(
                         i[1]))
-                # 这里获取了新颖性的主权项，喂，难道不应该变成字典吗？
+                # 这里获取了新颖性的主权项并存放成词典
                 for a in self.db.data:
                     temp_dic = {"signory_text": a[0], "patent_title": a[1], "suggestion": a[2]}
                     signories["related"].append(temp_dic)
