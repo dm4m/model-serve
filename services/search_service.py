@@ -60,5 +60,6 @@ def search_by_patent(signory_list):
     temp_sig = np.add.reduce(all_embed[1:])
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
-    rerank_list = rerank(last_query_embedding,last_other_embedding)
-    return rerank_list
+    # 增加返回值分数，该分数为rrf算法得到的聚合向量的分数，值越大越相似，没有区间限制
+    rerank_list,rerank_score = rerank(last_query_embedding,last_other_embedding)
+    return rerank_list,rerank_score
