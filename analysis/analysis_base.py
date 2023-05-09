@@ -442,7 +442,7 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
-                aa=document.add_paragraph("(1)新颖性比对结果") 
+                aa=document.add_paragraph("(1)新颖性比对结果内容")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(10)
                 aa.runs[0].font.name = '黑体'
@@ -450,18 +450,18 @@ class pdfcreator:#pdf生成器
                 p=document.add_paragraph()
                 for b in a:
                     (key, value), = b.items()
-                    if key=="有以下相关主权项：":
+                    if key=="有以下相关权利要求：":
                         p=document.add_paragraph()
                         p.style.font.name = '宋体'
                         p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                         p.add_run(key)
-                        p.add_run("\n")
+                        # p.add_run("\n")
                     else:
-                        if key=="原主权项：":
+                        if key=="原权利要求：":
                             p=document.add_paragraph()
                             p.style.font.name = '黑体'
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '黑体') 
-                            p.add_run("新颖性分析结果"+str(numa)+":")
+                            # p.add_run("新颖性分析结果"+str(numa)+":")
                             p=document.add_paragraph()
                             p.style.font.name = '宋体'
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
@@ -474,8 +474,13 @@ class pdfcreator:#pdf生成器
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                             p.add_run(key)                    
                             p.add_run(value)
-                if(len(self.addnewpicresult(nnum[numa-2]))!=0): 
-                    for i in self.addnewpicresult((nnum[numa-2])):
+                if(len(self.addnewpicresult(nnum[numa-2]))!=0):
+                    aa = document.add_paragraph("(2)新颖性分析结果统计")
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(10)
+                    aa.runs[0].font.name = '黑体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                for i in self.addnewpicresult((nnum[numa-2])):
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add_xaxis(i["xaxis"]) 
@@ -579,11 +584,11 @@ class pdfcreator:#pdf生成器
             if i[0]=="新颖性比对结果":
                 updata=[]
                 self.db.myexecu("SELECT ori_signory FROM patent.novelty_ana_result where novelty_ana_id="+str(i[1]))
-                updata.append({"原主权项：":self.db.data[0]})
-                updata.append({"有以下相关主权项：":""})
+                updata.append({"原权利要求：":self.db.data[0]})
+                updata.append({"有以下相关权利要求：":""})
                 self.db.myexecu("SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id="+str(i[1]))
                 for a in self.db.data:
-                    updata.append({"相关主权项：":a[0]})
+                    updata.append({"相关权利要求：":a[0]})
                     updata.append({"来自专利：":a[2]}) 
                     updata.append({"审查意见为：":a[1]})                   
                 mydata.append(updata)
