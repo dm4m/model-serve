@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
-from analysis.analysis_base import analyze_by_list, pdf_output
+from analysis.analysis_base import analyze_by_list, pdf_output, novelty_stats_draw
 import base64
 
 analysis_bp = Blueprint('analysis_bp', __name__)
@@ -12,6 +12,16 @@ def patent_analysis():
         figType = data.get('figType')
         patentIds = data.get('patentIds')
         return jsonify(analyze_by_list(patentIds, figType, anaType))
+    else:
+        return "success"
+
+@analysis_bp.route('/noveltyStats', methods=['POST'])
+def novelty_stats():
+    if request.method == 'POST':
+        data = request.json
+        noveltyResId = data.get('noveltyResId')
+        res = novelty_stats_draw(noveltyResId)
+        return jsonify(res)
     else:
         return "success"
 

@@ -284,6 +284,7 @@ class pdfcreator:#pdf生成器
         jiannum=0
         snum=[]
         nnum=[]
+        numa=0
         a=1
         pagenum={1:"一、",2:"二、",3:"三、"}      
         document = Document()
@@ -441,7 +442,7 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
-                aa=document.add_paragraph("(1)新颖性比对结果") 
+                aa=document.add_paragraph("(1)新颖性比对结果内容")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(10)
                 aa.runs[0].font.name = '黑体'
@@ -449,18 +450,18 @@ class pdfcreator:#pdf生成器
                 p=document.add_paragraph()
                 for b in a:
                     (key, value), = b.items()
-                    if key=="有以下相关主权项：":
+                    if key=="有以下相关权利要求：":
                         p=document.add_paragraph()
                         p.style.font.name = '宋体'
                         p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                         p.add_run(key)
-                        p.add_run("\n")
+                        # p.add_run("\n")
                     else:
-                        if key=="原主权项：":
+                        if key=="原权利要求：":
                             p=document.add_paragraph()
                             p.style.font.name = '黑体'
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '黑体') 
-                            p.add_run("新颖性分析结果"+str(numa)+":")
+                            # p.add_run("新颖性分析结果"+str(numa)+":")
                             p=document.add_paragraph()
                             p.style.font.name = '宋体'
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
@@ -473,8 +474,13 @@ class pdfcreator:#pdf生成器
                             p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
                             p.add_run(key)                    
                             p.add_run(value)
-                if(len(self.addnewpicresult(nnum[numa-2]))!=0): 
-                    for i in self.addnewpicresult((nnum[numa-2])):
+                if(len(self.addnewpicresult(nnum[numa-2]))!=0):
+                    aa = document.add_paragraph("(2)新颖性分析结果统计")
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(10)
+                    aa.runs[0].font.name = '黑体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                for i in self.addnewpicresult((nnum[numa-2])):
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add_xaxis(i["xaxis"]) 
@@ -544,9 +550,11 @@ class pdfcreator:#pdf生成器
             idstr+=str(i)+","
         idstr=idstr[0:-1]
         idstr+=")"
-        
-        self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)     
-        p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")                    
+        if len(nnum)==0:   
+            p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词0对,新颖性评判规则相关点0条,其中涉及上下位概念相关点0条,惯⽤⼿段直接置换0条,数字范围相关点0条,新颖性⻛险点0条。")  
+        else:
+            self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)    
+            p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")                                       
         self.db.myexecu("SELECT report_id,report_name from patent.report2generate where report_id= "+str(self.id))
         self.name=self.db.data[0][1]
         document.save(self.path+str(self.name)+".docx")
@@ -576,11 +584,11 @@ class pdfcreator:#pdf生成器
             if i[0]=="新颖性比对结果":
                 updata=[]
                 self.db.myexecu("SELECT ori_signory FROM patent.novelty_ana_result where novelty_ana_id="+str(i[1]))
-                updata.append({"原主权项：":self.db.data[0]})
-                updata.append({"有以下相关主权项：":""})
+                updata.append({"原权利要求：":self.db.data[0]})
+                updata.append({"有以下相关权利要求：":""})
                 self.db.myexecu("SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id="+str(i[1]))
                 for a in self.db.data:
-                    updata.append({"相关主权项：":a[0]})
+                    updata.append({"相关权利要求：":a[0]})
                     updata.append({"来自专利：":a[2]}) 
                     updata.append({"审查意见为：":a[1]})                   
                 mydata.append(updata)
@@ -589,9 +597,9 @@ class pdfcreator:#pdf生成器
     def addpicresult(self,id):#图片内容
         outresult=[]
         tabledata=[]
-        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where analysis_collection_id="+str(id))
+        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where stats_res_id="+str(id))
         mystr=str(self.db.data)
-        mystr=mystr[2:-3]        
+        mystr=mystr[2:-3]
         self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(mystr))
         for i in self.db.data:
             myjson=json.loads(str(i[0]))
@@ -754,7 +762,7 @@ def timesql(list):#置信区间计算SQL语句
 
 # #申请人分析
 def author(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]    
     sqls=authorsql(list)
     db.myexecu(sqls)
@@ -773,7 +781,7 @@ def pic1(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT relevant_sig,word_pairs, trigger_rules,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[3]))
@@ -794,7 +802,7 @@ def pic2(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT  relevant_sig,direct_substitution,hyponym_hypernym,numeric_range,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[4]))
@@ -818,7 +826,7 @@ def pic3(id):
     c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
     xlist=[]
     a=0
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT  relevant_sig,destroy,index_num FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     for i in db.data:
         xlist.append("权利"+str(i[2]))
@@ -832,7 +840,7 @@ def pic3(id):
     
 def pic4(id):
     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT sum(direct_substitution),sum( hyponym_hypernym),sum( numeric_range) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     result=[]
     result.append(["概念直接替换",db.data[0][0]]) 
@@ -845,7 +853,7 @@ def pic4(id):
     
 def pic5(id):
     c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     db.myexecu("SELECT sum(destroy),sum(trigger_rules) FROM patent.novelty_ana_item where novelty_ana_id="+str(id))
     result=[]
     result.append(["新颖性风险点",db.data[0][0]]) 
@@ -855,7 +863,7 @@ def pic5(id):
     c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))  
     return c.dump_options_with_quotes()
     
-def novelty_stats(id):
+def novelty_stats_draw(id):
     output=[]
     output.append(pic1(id))
     output.append(pic2(id))
@@ -863,17 +871,10 @@ def novelty_stats(id):
     output.append(pic4(id))
     output.append(pic5(id))
     return output
-        
-    
-    
-   
-        
-    
-
 
 # #趋势分析
 def trend(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     sqls=timesql(list)
     db.myexecu(sqls)
     timeblock=timecal(db.data)
@@ -895,7 +896,7 @@ def trend(list,type):
   
 # #地域分析
 def area(list,type):
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     output=[]
     sqls=areasql(list)
     db.myexecu(sqls)
@@ -917,7 +918,7 @@ def analyze_by_list(patentIds, figType, anaType):#三个功能封装在一起
     return trend(patentIds,figType)
 
 def pdf_output(id):#输出pdf
-    db = mydb('152.136.114.189','zym','zym','patent',6336,'utf8')
+    db = mydb('10.108.119.71','zym','zym','patent',3306,'utf8')
     mypdf=pdfcreator(id,db)
     mypdf.finalword()
     output=mypdf.pdfcreate()
