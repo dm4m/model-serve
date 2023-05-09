@@ -51,7 +51,8 @@ class Comparator:
         print("获得置换词时间：", y - x)
 
         review_flag = 0
-        review_opinion = '\n规则判断：\n'
+        # review_opinion = '\n规则判断：\n'
+        review_opinion = '规则判断：\n'
         # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}\n待申请专利权利要求："{sovereign_sentence_2}"\n审查意见：\n'
         # review_opinion = f'\n待比较内容：\n对比专利权利要求：{sovereign_sentence_1}, triple_1：{sovereign_triples_1}\n待申请专利权利要求："{sovereign_sentence_2}", triple_2：{sovereign_triples_2}\n审查意见：\n'
 
@@ -79,7 +80,8 @@ class Comparator:
 
         if review_flag == 0:
             print('暂未触发相关规则。')
-            review_opinion += '\t暂未触发相关规则。\n'
+            # review_opinion += '\t暂未触发相关规则。\n'
+            review_opinion += '暂未触发相关规则。\n'
         
         return self.statistical_dict, review_opinion, words_info, words_info_str
 
