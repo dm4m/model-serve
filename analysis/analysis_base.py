@@ -278,6 +278,49 @@ class pdfcreator:#pdf生成器
         self.searchnum=0
         self.newnum=0
 
+    def novelty_table_design(self, document, related_dic):
+        # 新颖性比对分析，相关权利要求的信息使用表格绘制
+        for relate_sig_id in range(len(related_dic["related"])):
+            # "related":[{"signory_text","patent_title","suggestion"}]
+
+            table = document.add_table(rows=2, cols=3, style='TableGrid')
+            for row in range(0, 2):
+                table.add_row()
+
+            document.styles['Normal'].font.name = u'宋体'
+            document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+            # 设置宽度
+            table.cell(0, 0).width = Cm(3)
+            table.cell(0, 1).width = Cm(3)
+            table.cell(0, 2).width = Cm(16)
+
+            table.cell(0, 0).merge(table.cell(0, 1))
+            table.cell(0, 0).text = "相关权利要求"+str(relate_sig_id+1)
+            table.cell(0, 2).text = related_dic["related"][relate_sig_id][
+                "signory_text"]  # "这是相关权利要求字符串。这是相关权利要求字符串。这是相关权利要求字符串。这是相关权利要求字符串。"
+
+            table.cell(1, 1).text = "标题"
+            table.cell(1, 2).text = related_dic["related"][relate_sig_id][
+                "patent_title"]  # "这是标题字符串。这是标题字符串。这是标题字符串。这是标题字符串。"
+
+            table.cell(2, 1).text = "申请号"
+            # TODO：对于检索到的权利要求所属申请号，如果拿不到就删掉这一行
+            table.cell(2, 2).text = "这是申请号字符串"
+
+            table.cell(1, 0).merge(table.cell(2, 0))
+            table.cell(1, 0).text = "所属专利信息"
+
+            table.cell(3, 0).merge(table.cell(3, 1))
+            table.cell(3, 0).text = "审查意见"
+            table.cell(3, 2).text = related_dic["related"][relate_sig_id]["suggestion"]
+            for row in range(4):
+                for column in range(3):
+                    if column == 0:
+                        table.cell(row, column).paragraphs[0].paragraph_format.alignment = WD_TABLE_ALIGNMENT.CENTER
+                    table.cell(row, column).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+
+            p = document.add_paragraph()
+
         
     
     def finalword(self):#生成最终的word  
@@ -295,9 +338,11 @@ class pdfcreator:#pdf生成器
         text.bold = True                    
         text.font.name = 'Arial'           
         text.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')  
-        mei.alignment = WD_ALIGN_PARAGRAPH.CENTER 
-        m.add_paragraph("-----------------------------------------------------------------------------").paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p=document.add_paragraph("专利分析报告") 
+        mei.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # 修改页眉
+        line = mei.add_run("_" * 85)
+        line.font.size = Pt(10)
+        p=document.add_paragraph("专利分析报告")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.runs[0].font.size = Pt(36)
         p.runs[0].font.name = '宋体'
@@ -352,14 +397,14 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')                  
                 table = document.add_table(rows=1, cols=3,style='TableGrid')
-                cells = table.add_row().cells
-                cells[0].text = '标题'
-                cells[1].text = '申请人列表'
-                cells[2].text = "申请时间"
                 rows = table.rows[0]
                 for cell in rows.cells:
                     shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
                     cell._tc.get_or_add_tcPr().append(shading_elm)
+                # 修改bug:检索结果表格表头不在第一行
+                table.rows[0].cells[0].text = '标题'
+                table.rows[0].cells[1].text = '申请人列表'
+                table.rows[0].cells[2].text = "申请时间"
                 for b in a:
                     for c in b:
                         jiannum+=1
@@ -436,45 +481,43 @@ class pdfcreator:#pdf生成器
             aa.runs[0].font.size = Pt(16)
             aa.runs[0].font.name = '黑体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')           
-            for a in self.addnovelresult():
+            for novelty_sig_item in self.addnovelresult():
                 aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":") 
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
-                aa=document.add_paragraph("(1)新颖性比对结果") 
-                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                aa.runs[0].font.size = Pt(10)
-                aa.runs[0].font.name = '黑体'
-                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')  
-                p=document.add_paragraph()
-                for b in a:
-                    (key, value), = b.items()
-                    if key=="有以下相关主权项：":
-                        p=document.add_paragraph()
-                        p.style.font.name = '宋体'
-                        p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
-                        p.add_run(key)
-                        p.add_run("\n")
-                    else:
-                        if key=="原主权项：":
-                            p=document.add_paragraph()
-                            p.style.font.name = '黑体'
-                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '黑体') 
-                            p.add_run("新颖性分析结果"+str(numa)+":")
-                            p=document.add_paragraph()
-                            p.style.font.name = '宋体'
-                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
-                            p.add_run(key)                    
-                            p.add_run(value)
-                            numa+=1
-                        else:
-                            p=document.add_paragraph()
-                            p.style.font.name = '宋体'
-                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体') 
-                            p.add_run(key)                    
-                            p.add_run(value)
-                if(len(self.addnewpicresult(nnum[numa-2]))!=0): 
+                # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
+                if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
+                    content_title = "(1)新颖性比对结果"
+                    aa = document.add_paragraph()
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '黑体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    p = document.add_paragraph(content_title)
+                for related_dic in novelty_sig_item:
+                    # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
+                    p = document.add_paragraph()
+                    p.style.font.name = '宋体'
+                    p.bold = True
+                    p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                    p.add_run("原权利要求：\n")
+                    p.add_run(related_dic["origin_signory_text"] + "\n")
+
+                    p = document.add_paragraph()
+                    p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
+                    self.novelty_table_design(self, document, related_dic)
+                
+                if(len(self.addnewpicresult(nnum[numa-2]))!=0):
+                    # 添加图的标题
+                    chart_title = "(2)新颖性比对结果可视化分析"
+                    aa = document.add_paragraph()
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '黑体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    p = document.add_paragraph(chart_title)
                     for i in self.addnewpicresult((nnum[numa-2])):
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
@@ -572,21 +615,24 @@ class pdfcreator:#pdf生成器
                     updata.append(uppdata)
                 tabledata.append(updata)
         return tabledata
-    
-    def addnovelresult(self):#新颖性内容增加
-        mydata=[]
+
+    def addnovelresult(self):  # 新颖性内容增加
+        # 改后：mydata存放的对象为一个新颖性比对结果的全部
+        # updata格式： {”origin_sig_text“:str,"related":[{"signory_text","patent_title","suggestion"}]}
+        mydata = []
         for i in self.data:
-            if i[0]=="新颖性比对结果":
-                updata=[]
-                self.db.myexecu("SELECT ori_signory FROM patent.novelty_ana_result where novelty_ana_id="+str(i[1]))
-                updata.append({"原主权项：":self.db.data[0]})
-                updata.append({"有以下相关主权项：":""})
-                self.db.myexecu("SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id="+str(i[1]))
+            if i[0] == "新颖性比对结果":
+                signories = {}
+                self.db.myexecu("SELECT ori_signory FROM patent.novelty_ana_result where novelty_ana_id=" + str(i[1]))
+                signories["origin_sig_text"] = self.db.data[0]
+                signories["related"] = []
+                self.db.myexecu(
+                    "SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id=" + str(i[1]))
+                # 这里获取了新颖性的主权项，喂，难道不应该变成字典吗？
                 for a in self.db.data:
-                    updata.append({"相关主权项：":a[0]})
-                    updata.append({"来自专利：":a[2]}) 
-                    updata.append({"审查意见为：":a[1]})                   
-                mydata.append(updata)
+                    temp_dic = {"signory_text": a[0], "patent_title": a[1], "suggestion": a[2]}
+                    signories["related"].append(temp_dic)
+                mydata.append(signories)
         return mydata
     
     def addpicresult(self,id):#图片内容
