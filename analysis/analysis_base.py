@@ -359,8 +359,25 @@ class pdfcreator:#pdf生成器
         text.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
         mei.alignment = WD_ALIGN_PARAGRAPH.CENTER
         # 修改页眉，85-8
-        line = mei.add_run("_" * 77)
-        line.font.size = Pt(10)
+        # line = mei.add_run("_" * 77)
+        # line.font.size = Pt(10)
+
+        # 通过分区添加页眉横线
+        m.add_paragraph("\t\t").paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        header_para = m.paragraphs[-1]
+        # style1:与页边距齐平，这样对不齐
+        # header_para.paragraph_format.left_indent = 0
+        # header_para.paragraph_format.right_indent = 0
+        # style2:横穿整个页面故段落边距紧贴页边，通过调整数值调整横线和页边的距离
+        header_para.paragraph_format.left_indent = - document.sections[0].left_margin  + docx.shared.Inches(0.8)
+        header_para.paragraph_format.right_indent = - document.sections[0].right_margin + docx.shared.Inches(2.0)
+        # 设置制表位分区
+        tab_stops = header_para.paragraph_format.tab_stops
+        tab_stops.add_tab_stop(docx.shared.Inches(3.5), WD_TAB_ALIGNMENT.CENTER)
+        tab_stops.add_tab_stop(docx.shared.Inches(6.5), WD_TAB_ALIGNMENT.RIGHT)
+        # 设置横线样式
+        header_para.runs[-1].underline = WD_UNDERLINE.THICK  # 厚 DOUBLE双下划线
+        
         p=document.add_paragraph("专利分析报告")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.runs[0].font.size = Pt(27)
