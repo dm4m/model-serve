@@ -284,37 +284,45 @@ class pdfcreator:#pdf生成器
             # "related":[{"signory_text","patent_title","suggestion"}]
 
             table = document.add_table(rows=2, cols=3, style='TableGrid')
-            for row in range(0, 3):
+            for row in range(0, 4):
                 table.add_row()
 
             document.styles['Normal'].font.name = u'宋体'
             document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
 
-            table.cell(0, 0).merge(table.cell(0, 1))
-            table.cell(0, 0).text = "相关权利要求"+str(relate_sig_id+1)
-            table.cell(0, 2).text = related_dic["related"][relate_sig_id][
-                "signory_text"]  # "这是相关权利要求字符串。这是相关权利要求字符串。这是相关权利要求字符串。这是相关权利要求字符串。"
+            # table.cell(0, 0).merge(table.cell(0, 1))
+            # table.cell(0, 0).text = "相关权利要求"+str(relate_sig_id+1)
+            # table.cell(0, 2).text = related_dic["related"][relate_sig_id]["signory_text"]
 
-            table.cell(1, 1).text = "标题"
-            table.cell(1,2).text = related_dic["related"][relate_sig_id][
-                "patent_title"]  # "这是标题字符串。这是标题字符串。这是标题字符串。这是标题字符串。"
-            table.cell(2, 1).text = "申请号"
+            # 0行和1行
+            table.cell(0, 1).text = "相关性"
+            # TODO: 相似度得分需要从related_dic或者哪里拿一下
+            table.cell(1, 1).text = "0.6"
+            table.cell(0, 0).merge(table.cell(1, 0))
+            table.cell(0, 0).text = "相关权利要求" + str(relate_sig_id + 1)
+            table.cell(0, 2).merge(table.cell(1, 2))
+            table.cell(0, 2).text = related_dic["related"][relate_sig_id]["signory_text"]
+
+            # 2行和3行，所属专利信息
+            table.cell(2, 1).text = "标题"
+            table.cell(2, 2).text = related_dic["related"][relate_sig_id]["patent_title"]
+            table.cell(3, 1).text = "申请号"
             # TODO：对于检索到的权利要求所属申请号，如果拿不到就删掉这一行
-            table.cell(2, 2).text = "这是申请号字符串"
+            table.cell(3, 2).text = "这是申请号字符串"
 
-            table.cell(1, 0).merge(table.cell(2, 0))
-            table.cell(1, 0).text = "所属专利信息"
+            table.cell(2, 0).merge(table.cell(3, 0))
+            table.cell(2, 0).text = "所属专利信息"
 
-            table.cell(3, 0).merge(table.cell(3, 1))
-            table.cell(3, 0).merge(table.cell(3, 2))
-            table.cell(3, 0).text = "审查意见"
             table.cell(4, 0).merge(table.cell(4, 1))
             table.cell(4, 0).merge(table.cell(4, 2))
-            table.cell(4,0).text = self.novelty_string_change(related_dic["related"][relate_sig_id]["suggestion"])
+            table.cell(4, 0).text = "审查意见"
+            table.cell(5, 0).merge(table.cell(5, 1))
+            table.cell(5, 0).merge(table.cell(5, 2))
+            table.cell(5,0).text = self.novelty_string_change(related_dic["related"][relate_sig_id]["suggestion"])
 
-            for row in range(4):
+            for row in range(5):
                 for column in range(3):
-                    if column == 0:
+                    if column == 0 or column == 1:
                         table.cell(row, column).paragraphs[0].paragraph_format.alignment = WD_TABLE_ALIGNMENT.CENTER
                     table.cell(row, column).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
@@ -427,60 +435,60 @@ class pdfcreator:#pdf生成器
                         cells[1].text=c[1]
                         cells[2].text=c[2]
                 document.add_paragraph(" ")
-                if len(self.addpicresult(snum[self.searchnum-1]))!=0:
-                    aa=document.add_paragraph("(2)统计分析结果")
-                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(12)
-                    aa.runs[0].font.name = '宋体'
-                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                    for i in self.addpicresult(snum[self.searchnum-1]):
-                        if i["type"]=="柱状":
-                            c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-                            c.add_xaxis(i["xaxis"])
-                            if len(i["data"])==1:
-                                (key, value), = i["data"].items()
-                                c.add_yaxis( series_name=key,y_axis=value)
-                            else:
-                                for key,value in i["data"].items():
-                                    c.add_yaxis( series_name=key,y_axis=value)
-                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
-                            paragraph=document.add_paragraph()
-                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                            run = paragraph.add_run("")
-                            inline_shape=run.add_picture("bar.png",width=Inches(7.0))
-                            inline_shape.height = Cm(8.06)
-                            inline_shape.width = Cm(14.5)
-                            run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
-                        if i["type"]=="折线":
-                            c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-                            c.add_xaxis(i["xaxis"])
-                            if len(i["data"])==1:
-                                (key, value), = i["data"].items()
-                                c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
-                            else:
-                                for key,value in i["data"].items():
-                                    c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
-                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
-                            paragraph=document.add_paragraph()
-                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                            run = paragraph.add_run("")
-                            inline_shape=run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
-                            inline_shape.height = Cm(8.06)
-                            inline_shape.width = Cm(14.5)
-                        if i["type"]=="饼状":
-                            c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
-                            c.add("",i["data"])
-                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
-                            c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
-                            make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
-                            paragraph=document.add_paragraph()
-                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-                            run = paragraph.add_run("")
-                            inline_shape=run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
-                            inline_shape.height = Cm(8.06)
-                            inline_shape.width = Cm(14.5)
+                # if len(self.addpicresult(snum[self.searchnum-1]))!=0:
+                #     aa=document.add_paragraph("(2)统计分析结果")
+                #     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                #     aa.runs[0].font.size = Pt(12)
+                #     aa.runs[0].font.name = '宋体'
+                #     aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                #     for i in self.addpicresult(snum[self.searchnum-1]):
+                #         if i["type"]=="柱状":
+                #             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                #             c.add_xaxis(i["xaxis"])
+                #             if len(i["data"])==1:
+                #                 (key, value), = i["data"].items()
+                #                 c.add_yaxis( series_name=key,y_axis=value)
+                #             else:
+                #                 for key,value in i["data"].items():
+                #                     c.add_yaxis( series_name=key,y_axis=value)
+                #             c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                #             make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
+                #             paragraph=document.add_paragraph()
+                #             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                #             run = paragraph.add_run("")
+                #             inline_shape=run.add_picture("bar.png",width=Inches(7.0))
+                #             inline_shape.height = Cm(8.06)
+                #             inline_shape.width = Cm(14.5)
+                #             run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
+                #         if i["type"]=="折线":
+                #             c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                #             c.add_xaxis(i["xaxis"])
+                #             if len(i["data"])==1:
+                #                 (key, value), = i["data"].items()
+                #                 c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                #             else:
+                #                 for key,value in i["data"].items():
+                #                     c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
+                #             c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                #             make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
+                #             paragraph=document.add_paragraph()
+                #             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                #             run = paragraph.add_run("")
+                #             inline_shape=run.add_picture(self.path+str(self.id)+"line.png",width=Inches(7.0))
+                #             inline_shape.height = Cm(8.06)
+                #             inline_shape.width = Cm(14.5)
+                #         if i["type"]=="饼状":
+                #             c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+                #             c.add("",i["data"])
+                #             c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                #             c.set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
+                #             make_snapshot(snapshot, c.render(), self.path+str(self.id)+"pie.png",is_remove_html=True)
+                #             paragraph=document.add_paragraph()
+                #             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                #             run = paragraph.add_run("")
+                #             inline_shape=run.add_picture(self.path+str(self.id)+"pie.png",width=Inches(7.0))
+                #             inline_shape.height = Cm(8.06)
+                #             inline_shape.width = Cm(14.5)
             ji+=1
             document.add_paragraph(" ")
         if(len(self.addnovelresult())!=0):
