@@ -327,7 +327,7 @@ class pdfcreator:#pdf生成器
                     table.cell(row, column).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
             table.columns[0].width = Inches(1.2)
-            table.columns[1].width = Inches(0.7)
+            table.columns[1].width = Inches(0.9)
             table.columns[2].width = Inches(4)
 
             p = document.add_paragraph()
