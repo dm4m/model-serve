@@ -20,7 +20,8 @@ def get_relevant_vec_results(collection_name, field, query, limit = 100, output_
 def get_relevant_id_list(collection_name, field, query, limit = 100):
     vec_results = get_relevant_vec_results(collection_name, field, query, limit=limit)
     id_list = list(vec_results[0].ids)
-    return id_list
+    distances = list(vec_results[0].distances)
+    return id_list, distances
 
 def get_relevant_all_field_results(collection_name, field, schema, query_embeddings, limit = 100, output_list = []):
     ids= []
