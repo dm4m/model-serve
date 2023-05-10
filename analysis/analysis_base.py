@@ -337,8 +337,8 @@ class pdfcreator:#pdf生成器
         text.font.name = 'Arial'           
         text.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')  
         mei.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        # 修改页眉
-        line = mei.add_run("_" * 85)
+        # 修改页眉，85-8
+        line = mei.add_run("_" * 77)
         line.font.size = Pt(10)
         p=document.add_paragraph("专利分析报告")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -396,7 +396,6 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.name = '黑体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')                  
                 table = document.add_table(rows=1, cols=3,style='TableGrid')
-                cells = table.add_row().cells
                 rows = table.rows[0]
                 for cell in rows.cells:
                     shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
@@ -490,7 +489,7 @@ class pdfcreator:#pdf生成器
                 # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
                 if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
                     content_title = "(1)新颖性比对结果内容"
-                    aa = document.add_paragraph()
+                    aa = document.add_paragraph(content_title)
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     aa.runs[0].font.size = Pt(10)
                     aa.runs[0].font.name = '黑体'
