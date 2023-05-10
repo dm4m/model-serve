@@ -632,11 +632,11 @@ class pdfcreator:#pdf生成器
                 signories["origin_sig_text"] = str(self.db.data[0][0])
                 signories["related"] = []
                 self.db.myexecu(
-                    "SELECT relevant_sig,compare_result,ori_patent_title FROM patent.novelty_ana_item where novelty_ana_id=" + str(
+                    "SELECT relevant_sig,compare_result,ori_patent_title, score, patent_code FROM patent.novelty_ana_item where novelty_ana_id=" + str(
                         i[1]))
                 # 这里获取了新颖性的主权项并存放成词典
                 for a in self.db.data:
-                    temp_dic = {"signory_text": a[0], "patent_title": a[2], "suggestion": a[1]}
+                    temp_dic = {"signory_text": a[0], "patent_title": a[2], "suggestion": a[1], "score": a[3], "patent_code": a[4]}
                     signories["related"].append(temp_dic)
                 mydata.append(signories)
         return mydata
@@ -644,7 +644,7 @@ class pdfcreator:#pdf生成器
     def addpicresult(self,id):#图片内容
         outresult=[]
         tabledata=[]
-        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where stats_res_id="+str(id))
+        self.db.myexecu("SELECT stats_res_id FROM patent.stats_ana_result where analysis_collection_id="+str(id))
         mystr=str(self.db.data)
         mystr=mystr[2:-3]
         self.db.myexecu("SELECT option_json FROM patent.stats_ana_item where stats_ana_id="+str(mystr))

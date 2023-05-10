@@ -61,6 +61,7 @@ def signory_item_analysis(signory_item):
         tmp['relevant_sig_id'] = sig['signory_id']
         tmp['relevant_sig'] = sig["signory_seg"]
         tmp['ori_patent_title'] = sig["title"]
+        tmp['patent_code'] = sig["patent_code"]
         tmp['compare_result'], tmp['statistical_dict'], tmp['statistical_info'] = novelty_compare(signory_item, sig["signory_seg"])
         tmp['score'] = getscore(distances[index])
         ans_result.append(tmp)
