@@ -480,7 +480,7 @@ class pdfcreator:#pdf生成器
             aa.runs[0].font.size = Pt(16)
             aa.runs[0].font.name = '黑体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')           
-            for novelty_sig_item in self.addnovelresult():
+            for related_dic in self.addnovelresult():
                 aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":") 
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
@@ -494,18 +494,16 @@ class pdfcreator:#pdf生成器
                     aa.runs[0].font.size = Pt(10)
                     aa.runs[0].font.name = '黑体'
                     aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
-                    p = document.add_paragraph(content_title)
-                for related_dic in novelty_sig_item:
-                    # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
-                    p = document.add_paragraph()
-                    p.style.font.name = '宋体'
-                    p.bold = True
-                    p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                    p.add_run("原权利要求：\n")
-                    p.add_run(related_dic["origin_signory_text"] + "\n")
-                    p = document.add_paragraph()
-                    p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
-                    self.novelty_table_design(self, document, related_dic)
+                # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
+                p = document.add_paragraph()
+                p.style.font.name = '宋体'
+                p.bold = True
+                p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                p.add_run("原权利要求：\n")
+                p.add_run(related_dic["origin_signory_text"] + "\n")
+                p = document.add_paragraph()
+                p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
+                self.novelty_table_design(self, document, related_dic)
                 if(len(self.addnewpicresult(nnum[numa-2]))!=0):
                     aa = document.add_paragraph("(2)新颖性分析结果统计")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
