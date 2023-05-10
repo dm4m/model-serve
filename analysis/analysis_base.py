@@ -10,7 +10,7 @@ import math
 from sklearn.cluster import KMeans
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
-from docx.shared import Cm, Pt
+from docx.shared import Cm, Pt, Mm
 from docx.shared import Inches
 import io
 import base64
@@ -310,7 +310,7 @@ class pdfcreator:#pdf生成器
             table.cell(3, 0).text = "审查意见"
             table.cell(4, 0).merge(table.cell(4, 1))
             table.cell(4, 0).merge(table.cell(4, 2))
-            table.cell(4,0).text = related_dic["related"][relate_sig_id]["suggestion"]
+            table.cell(4,0).text = self.novelty_string_change(related_dic["related"][relate_sig_id]["suggestion"])
 
             for row in range(4):
                 for column in range(3):
@@ -323,6 +323,16 @@ class pdfcreator:#pdf生成器
             table.columns[2].width = Inches(4)
 
             p = document.add_paragraph()
+
+    def novelty_string_change(self,novelty_string):
+        # TODO：如果需要改一下审查意见的格式，直接到这里来改就行，预留一个函数
+        # novel_paragraph = "采取相关关系词对、新颖性判断规则对待分析权利要求和相关权利要求进行分析后，获得比对结果为：可能破坏带申请专利技术特征的依据点共有{}条。具体分析如下。\n".format(novelty_string.count("将破坏"))
+        # 设想是修改一下(i)相关关系词对(ii)规则判断，规则判断的每一个小点都用一个·或者一个-代替
+        novelty_string_new = novelty_string.replace("相关关系词对：","(i)相关关系词对:")
+        novelty_string_new = novelty_string_new.replace("规则判断：", "(ii)规则判断:")
+        # novelty_string_new = novelty_string
+        return novelty_string_new
+
 
     def finalword(self):#生成最终的word
         jiannum=0
@@ -345,14 +355,14 @@ class pdfcreator:#pdf生成器
         line.font.size = Pt(10)
         p=document.add_paragraph("专利分析报告")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.runs[0].font.size = Pt(36)
+        p.runs[0].font.size = Pt(27)
         p.runs[0].font.name = '宋体'
         p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
         p=document.add_paragraph("目录")
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.runs[0].font.size = Pt(16)
-        p.runs[0].font.name = '黑体'
-        p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+        p.runs[0].font.name = '宋体'
+        p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
         if(len(self.addsearchresult())!=0):
             pp=document.add_paragraph(pagenum[a]+"专利检索结果及分析")
             pp.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -382,22 +392,22 @@ class pdfcreator:#pdf生成器
                 if i[0]=="检索结果":
                     snum.append(i[1])
             aa=document.add_paragraph(npagenum[ji]+"专利检索结果及分析")
-            aa.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            aa.runs[0].font.size = Pt(16)
-            aa.runs[0].font.name = '黑体'
-            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+            aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            aa.runs[0].font.size = Pt(14)
+            aa.runs[0].font.name = '宋体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             for a in self.addsearchresult():
                 self.searchnum+=1
                 aa=document.add_paragraph(str(self.searchnum)+"、检索结果集"+str(self.searchnum)+":")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
-                aa.runs[0].font.name = '黑体'
-                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                aa.runs[0].font.name = '宋体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 aa=document.add_paragraph("(1)检索结果内容")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                aa.runs[0].font.size = Pt(10)
-                aa.runs[0].font.name = '黑体'
-                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                aa.runs[0].font.size = Pt(12)
+                aa.runs[0].font.name = '宋体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 table = document.add_table(rows=1, cols=3,style='TableGrid')
                 rows = table.rows[0]
                 for cell in rows.cells:
@@ -420,9 +430,9 @@ class pdfcreator:#pdf生成器
                 if len(self.addpicresult(snum[self.searchnum-1]))!=0:
                     aa=document.add_paragraph("(2)统计分析结果")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(10)
-                    aa.runs[0].font.name = '黑体'
-                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '宋体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                     for i in self.addpicresult(snum[self.searchnum-1]):
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
@@ -480,53 +490,53 @@ class pdfcreator:#pdf生成器
             numa=1
             aa=document.add_paragraph(npagenum[ji]+"新颖性创造性比对结果及分析")
             aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            aa.runs[0].font.size = Pt(16)
-            aa.runs[0].font.name = '黑体'
-            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+            aa.runs[0].font.size = Pt(14)
+            aa.runs[0].font.name = '宋体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             for related_dic in self.addnovelresult():
                 aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
-                aa.runs[0].font.name = '黑体'
-                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                aa.runs[0].font.name = '宋体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
                 if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
                     content_title = "(1)新颖性比对结果内容"
                     aa = document.add_paragraph(content_title)
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(10)
-                    aa.runs[0].font.name = '黑体'
-                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '宋体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
                 p = document.add_paragraph()
                 p.style.font.name = '宋体'
                 p.bold = True
                 p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 p.add_run("原权利要求：\n")
-                p.add_run(related_dic["origin_sig_text"] + "\n")
+                p.add_run("\t"+related_dic["origin_sig_text"] + "\n")
                 p = document.add_paragraph()
                 p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
                 self.novelty_table_design(document, related_dic)
                 if(len(self.addnewpicresult(nnum[numa-2]))!=0):
                     aa = document.add_paragraph("(2)新颖性分析结果统计")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(10)
-                    aa.runs[0].font.name = '黑体'
-                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '宋体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 for i in self.addnewpicresult((nnum[numa-2])):
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add_xaxis(i["xaxis"])
                             if len(i["data"])==1:
                                 (key, value), = i["data"].items()
-                                c.add_yaxis( series_name=key,y_axis=value)
+                                c.add_yaxis( series_name=key,y_axis=value,bar_width="40%")
                             else:
                                 for key,value in i["data"].items():
                                     c.add_yaxis( series_name=key,y_axis=value)
-                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            c.set_global_opts(xaxis_opts=opts.AxisOpts(name = "权利要求编号",splitline_opts=opts.SplitLineOpts(is_show=False)),yaxis_opts=opts.AxisOpts(name="数量",splitline_opts=opts.SplitLineOpts(is_show=False)),title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
                             make_snapshot(snapshot, c.render(), self.path+str(self.id)+"bar.png",is_remove_html=True)
                             paragraph=document.add_paragraph()
-                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
                             run = paragraph.add_run("")
                             inline_shape= run.add_picture(self.path+str(self.id)+"bar.png",width=Inches(7.0))
                             inline_shape.height = Cm(8.06)
@@ -541,7 +551,7 @@ class pdfcreator:#pdf生成器
                             else:
                                 for key,value in i["data"].items():
                                     c.add_yaxis( series_name=key,y_axis=value,is_connect_nones=True)
-                            c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
+                            c.set_global_opts(xaxis_opts=opts.AxisOpts(name = "权利要求编号",splitline_opts=opts.SplitLineOpts(is_show=False)),title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
                             make_snapshot(snapshot, c.render(), self.path+str(self.id)+"line.png",is_remove_html=True)
                             paragraph=document.add_paragraph()
                             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -568,9 +578,9 @@ class pdfcreator:#pdf生成器
         document.add_paragraph(" ")
         aa=document.add_paragraph(npagenum[ji]+"小结")
         aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        aa.runs[0].font.size = Pt(16)
-        aa.runs[0].font.name = '黑体'
-        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '黑体')
+        aa.runs[0].font.size = Pt(14)
+        aa.runs[0].font.name = '宋体'
+        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
         p=document.add_paragraph()
         p.style.font.name = '宋体'
         p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
@@ -584,7 +594,7 @@ class pdfcreator:#pdf生成器
         idstr=idstr[0:-1]
         idstr+=")"
         if len(nnum)==0:
-            p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词0对,新颖性评判规则相关点0条,其中涉及上下位概念相关点0条,惯⽤⼿段直接置换0条,数字范围相关点0条,新颖性⻛险点0条。")
+            p.add_run("\t在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词0对,新颖性评判规则相关点0条,其中涉及上下位概念相关点0条,惯⽤⼿段直接置换0条,数字范围相关点0条,新颖性⻛险点0条。")
         else:
             self.db.myexecu("SELECT sum(word_pairs_sum),sum(trigger_rules_sum),sum(hyponym_hypernym_sum),sum(direct_substitution_sum),sum(numeric_range_sum),sum(destroy_sum)FROM patent.novelty_ana_result where novelty_ana_id in "+idstr)
             p.add_run("在专利预评估分析过程中,得到了"+str(result[0])+"篇检索结果集,其中共包括"+str(result[1])+"篇相关专利。对"+str(result[2])+"条权利要求进⾏了新颖性分析,在与各自相关权利要求的⽐较中,探测相关词"+str(self.db.data[0][0])+"对,新颖性评判规则相关点"+str(self.db.data[0][1])+"条,其中涉及上下位概念相关点"+str(self.db.data[0][2])+"条,惯⽤⼿段直接置换"+str(self.db.data[0][3])+"条,数字范围相关点"+str(self.db.data[0][4])+"条,新颖性⻛险点"+str(self.db.data[0][5])+"条。")
