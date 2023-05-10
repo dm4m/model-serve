@@ -508,13 +508,13 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
-                # if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
-                #     content_title = "(1)新颖性比对结果内容"
-                #     aa = document.add_paragraph(content_title)
-                #     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                #     aa.runs[0].font.size = Pt(12)
-                #     aa.runs[0].font.name = '宋体'
-                #     aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
+                    content_title = "(1)新颖性比对结果内容"
+                    aa = document.add_paragraph(content_title)
+                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    aa.runs[0].font.size = Pt(12)
+                    aa.runs[0].font.name = '宋体'
+                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
                 p = document.add_paragraph()
                 p.style.font.name = '宋体'
