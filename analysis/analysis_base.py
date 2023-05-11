@@ -538,7 +538,7 @@ class pdfcreator:#pdf生成器
                 p.bold = True
                 p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 p.add_run("原权利要求：\n")
-                p.add_run("\t"+related_dic["origin_sig_text"] + "\n")
+                p.add_run(related_dic["origin_sig_text"] + "\n")
                 p = document.add_paragraph()
                 p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
                 self.novelty_table_design(document, related_dic)
