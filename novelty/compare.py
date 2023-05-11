@@ -220,6 +220,14 @@ class Comparator:
             substitution_words += another_name_e1 if another_name_e1 != [] else []
             substitution_words += another_name_e2 if another_name_e2 != [] else []
 
+        # print(f"substitution_words:{substitution_words}")
+        # substitution_words_tmp = []
+        # for i in substitution_words:
+        #     print(i, re.findall(r'\d+', i))
+        #     if re.findall(r'\d+', i) == []:
+        #         substitution_words_tmp.append(i)
+        # print(f"substitution_words_tmp:{substitution_words_tmp}")
+
         return substitution_words
     # 惯用手段的直接置换
     def direct_substitution(self, review_flag, review_opinion, triple_1, triple_2, triple_copy_1, triple_copy_2, substitution_words_1, substitution_words_2):
@@ -257,7 +265,8 @@ class Comparator:
             else:
                 return False
 
-        if is_punctuation(triple_copy_1[0]) or is_punctuation(triple_copy_1[2]) or is_punctuation(triple_copy_2[0]) or is_punctuation(triple_copy_2[2]):
+        if is_punctuation(triple_copy_1[0]) or is_punctuation(triple_copy_1[2]) or is_punctuation(triple_copy_2[0]) or is_punctuation(triple_copy_2[2]) or \
+                re.findall(r'\d+', triple_copy_1[0]) != [] or re.findall(r'\d+', triple_copy_1[2]) != [] or re.findall(r'\d+', triple_copy_2[0]) != [] or re.findall(r'\d+', triple_copy_2[2]) != []:
             return review_flag, review_opinion
         else:
             if triple_copy_1[0] in substitution_words_2 or triple_copy_1[2] in substitution_words_2 or triple_copy_2[0] in substitution_words_1 or triple_copy_2[2] in substitution_words_1:
