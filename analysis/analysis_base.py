@@ -433,15 +433,16 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.size = Pt(12)
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                table = document.add_table(rows=1, cols=3,style='TableGrid')
+                table = document.add_table(rows=1, cols=4,style='TableGrid')
                 rows = table.rows[0]
                 for cell in rows.cells:
                     shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
                     cell._tc.get_or_add_tcPr().append(shading_elm)
                 # 修改bug:检索结果表格表头不在第一行
-                table.rows[0].cells[0].text = "标题"
-                table.rows[0].cells[1].text = "申请人列表"
-                table.rows[0].cells[2].text = "申请时间"
+                table.rows[0].cells[0].text = "专利号"
+                table.rows[0].cells[1].text = "标题"
+                table.rows[0].cells[2].text = "申请人列表"
+                table.rows[0].cells[3].text = "申请时间"
                 for b in a:
                     for c in b:
                         jiannum+=1
@@ -451,6 +452,7 @@ class pdfcreator:#pdf生成器
                         cells[0].text=c[0]
                         cells[1].text=c[1]
                         cells[2].text=c[2]
+                        cells[3].text=c[3]
                 document.add_paragraph(" ")
                 if len(self.addpicresult(snum[self.searchnum-1]))!=0:
                     aa=document.add_paragraph("(2)统计分析结果")
@@ -639,7 +641,7 @@ class pdfcreator:#pdf生成器
                     mydata.append(a[0])
                 for a in mydata:
                     uppdata=[]
-                    self.db.myexecu("SELECT title,inventor_list,application_date FROM patent.patent where id ="+str(a))
+                    self.db.myexecu("SELECT patent_code, title, inventor_list, application_date FROM patent.patent where id ="+str(a))
                     for b in self.db.data:
                         uppdata.append(b)
                     updata.append(uppdata)
@@ -725,9 +727,9 @@ class pdfcreator:#pdf生成器
         outresult=[]
         tabledata=[]
         self.db.myexecu("SELECT id FROM patent.novelty_stats_result where novelty_ana_result_id="+str(id))
-        mystr=str(self.db.data)
-        mystr=mystr[2:-3]
-        self.db.myexecu("SELECT option_json FROM patent.novelty_stats_item where novelty_stats_id="+mystr)
+        # 针对同一新颖性分析结果集的多次统计结果相同，因此如果表中有多个也只读一个
+        novelty_stats_id = self.db.data[0][0]
+        self.db.myexecu("SELECT option_json FROM patent.novelty_stats_item where novelty_stats_id="+ str(novelty_stats_id))
         for i in self.db.data:
             myjson=json.loads(str(i[0]))
             mytitle=myjson["title"][0]["text"]

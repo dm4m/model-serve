@@ -56,7 +56,7 @@ def signory_item_analysis(signory_item):
     relevant_signorys = get_sig_by_id(relevant_signory_ids)
     ans_result = []
     for index, sig in enumerate(relevant_signorys) :
-        print("比较：" + sig["signory_seg"])
+        # print("比较：" + sig["signory_seg"])
         tmp = {}
         tmp['relevant_sig_id'] = sig['signory_id']
         tmp['relevant_sig'] = sig["signory_seg"]
