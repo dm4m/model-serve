@@ -307,7 +307,6 @@ class pdfcreator:#pdf生成器
             table.cell(2, 1).text = "标题"
             table.cell(2, 2).text = related_dic["related"][relate_sig_id]["patent_title"]
             table.cell(3, 1).text = "申请号"
-            # TODO：对于检索到的权利要求所属申请号，如果拿不到就删掉这一行
             table.cell(3, 2).text = related_dic["related"][relate_sig_id]["patent_code"]
 
             table.cell(2, 0).merge(table.cell(3, 0))
@@ -332,8 +331,62 @@ class pdfcreator:#pdf生成器
 
             p = document.add_paragraph()
 
+    def whole_compare(self,document,patent_info,relate_info):
+        # TODO：如果需要加一个总体的，就加这个
+        # patent_info:dict,{申请编号,申请人,发明创造名称title}
+        # relate_info:list[{标题，申请号，语义相似度}]
+        aa = document.add_paragraph("1、总体比对结果")
+        aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        aa.runs[0].font.size = Pt(13)
+        aa.runs[0].font.name = '宋体'
+        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
+        title_text = "本申请涉及"+str(patent_info["title"])+"领域，基本信息如下："
+        aa = document.add_paragraph(title_text)
+        aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        aa.runs[0].font.size = Pt(12)
+        aa.runs[0].font.name = '宋体'
+        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
+        table = document.add_table(rows=1, cols=1, style='TableGrid')
+        for row in range(0, 2):
+            table.add_row()
+        document.styles['Normal'].font.name = u'宋体'
+        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+        table.cell(0, 0).text = "申请号或公开号:"+patent_info["publication_code"]
+        table.cell(1, 0).text = "申请人或专利权人："+patent_info["publication_person"]
+        table.cell(2, 0).text = "发明创造名称:"+patent_info["title"]
+        document.add_paragraph(" ")
+
+        similiar_text = "通过智能检索，共寻找到相似专利共" + str(len(relate_info)) + "篇，该专利集合均具有比对价值，具体信息如下表所示。"
+        aa = document.add_paragraph(similiar_text)
+        aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        aa.runs[0].font.size = Pt(12)
+        aa.runs[0].font.name = '宋体'
+        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
+        table = document.add_table(rows=1, cols=3, style='TableGrid')
+        rows = table.rows[0]
+        for cell in rows.cells:
+            shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
+            cell._tc.get_or_add_tcPr().append(shading_elm)
+        # 修改bug:检索结果表格表头不在第一行
+        table.rows[0].cells[0].text = "标题"
+        table.rows[0].cells[1].text = "申请号"
+        table.rows[0].cells[2].text = "语义相似度"
+        for relate_patent in relate_info:
+            document.styles['Normal'].font.name = u'宋体'
+            document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+            cells = table.add_row().cells
+            cells[0].text = relate_patent["title"]
+            cells[1].text = relate_patent["patent_code"]
+            cells[2].text = str(relate_patent["similar_score"])
+        document.add_paragraph(" ")
+
+
+
+
     def novelty_string_change(self,novelty_string):
-        # TODO：如果需要改一下审查意见的格式，直接到这里来改就行，预留一个函数
         # novel_paragraph = "采取相关关系词对、新颖性判断规则对待分析权利要求和相关权利要求进行分析后，获得比对结果为：可能破坏带申请专利技术特征的依据点共有{}条。具体分析如下。\n".format(novelty_string.count("将破坏"))
         # 设想是修改一下(i)相关关系词对(ii)规则判断，规则判断的每一个小点都用一个·或者一个-代替
         novelty_string_new = novelty_string.replace("相关关系词对：","(i)相关关系词对:")
@@ -519,6 +572,11 @@ class pdfcreator:#pdf生成器
             aa.runs[0].font.name = '宋体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             for related_dic in self.addnovelresult():
+                # # TODO:需要总体比对加入，不需要就不用加入
+                # test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2"}
+                # test_relate = [{"title":"相关标题1","similar_score":20,"patent_code":"测试专利1的code"},
+                # {"title":"相关标题2","similar_score":18,"patent_code":"测试专利2的code"}]
+                # self.whole_compare(document, test_dic, test_relate)
                 aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
@@ -548,7 +606,22 @@ class pdfcreator:#pdf生成器
                     aa.runs[0].font.size = Pt(12)
                     aa.runs[0].font.name = '宋体'
                     aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                for i in self.addnewpicresult((nnum[numa-2])):
+                    for i in self.addnewpicresult((nnum[numa-2])):
+                        if i["title"] == "各比对结果相关词和规则相关点数量":
+                            p = document.add_paragraph()
+                            p.style.font.name = '宋体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                            p.add_run("        通过与比对文件内权利要求的比较，统计了比对结果相关词和规则相关点数量。其中，相关关系词在词级别提取对比文件中可能影响新颖性的词语，与待分析专利相关词汇形成“相关关系词对”；通过提取待分析专利和对比文件中涉及专利申请新颖性审查原则的描述，形成规则相关点。二者统计数目如下所示。\n")
+                        elif i["title"] == "规则相关点各类型数量":
+                            p = document.add_paragraph()
+                            p.style.font.name = '宋体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                            p.add_run("        规则相关点类型依照专利申请新颖性审查原则进行提取，提取可能涉及概念替换、上下位概念替换、数值和数值范围三种类型的相关点对，统计结果如下。\n")
+                        elif i["title"] == "各比对结果疑似新颖性风险点":
+                            p = document.add_paragraph()
+                            p.style.font.name = '宋体'
+                            p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                            p.add_run("        在规则相关点比对中，可能存在影响待分析新颖性的比对结果（如涉及数值范围重叠等），称其为“新颖性风险点”。比对文件与待分析专利的比对结果中，可能影响待分析专利新颖性的风险点统计结果如下。\n")
                         if i["type"]=="柱状":
                             c =Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add_xaxis(i["xaxis"])
@@ -567,7 +640,7 @@ class pdfcreator:#pdf生成器
                             inline_shape.height = Cm(8.06)
                             inline_shape.width = Cm(14.5)
                             document.add_paragraph("   ")
-                        if i["type"]=="折线":
+                        elif i["type"]=="折线":
                             c =Line(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add_xaxis(i["xaxis"])
                             if len(i["data"])==1:
@@ -585,7 +658,7 @@ class pdfcreator:#pdf生成器
                             inline_shape.height = Cm(8.06)
                             inline_shape.width = Cm(14.5)
                             document.add_paragraph("   ")
-                        if i["type"]=="饼状":
+                        elif i["type"]=="饼状":
                             c =Pie(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
                             c.add("",i["data"])
                             c.set_global_opts(title_opts=opts.TitleOpts(title=i["title"],pos_left="center", pos_top="top"), legend_opts=opts.LegendOpts(type_='plain',pos_top="bottom"))
