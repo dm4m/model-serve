@@ -61,5 +61,7 @@ def rerank(query_vec,last_embed):
     order = sorted(doc_score.items(),key=lambda d:d[1], reverse=True)
     # 增加了返回值的部分
     order_list = [i[0] for i in order]
-    order_score_list = [i[1] for i in order]
+    # print(type(order[0][1]))
+    order_score_list = [float(i[1]) for i in order]
+    # print(type(order_score_list[0]))
     return order_list[0:100], order_score_list[0:100]

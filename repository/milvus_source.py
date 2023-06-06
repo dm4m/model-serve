@@ -23,7 +23,7 @@ def get_relevant_id_list(collection_name, field, query, limit = 100):
     distances = list(vec_results[0].distances)
     return id_list, distances
 
-def get_relevant_all_field_results(collection_name, field, schema, query_embeddings, limit = 100, output_list = []):
+def get_relevant_all_field_results(collection_name, field, schema, query_embeddings, limit = 100, output_list = [],out_type="sig"):
     ids= []
     primary_id = []
     embed = []
@@ -31,20 +31,31 @@ def get_relevant_all_field_results(collection_name, field, schema, query_embeddi
     connections.connect(alias="default", host='localhost', port='19530')
     collection = Collection(name=collection_name, schema=schema, using='default')
     collection.load()
-    # 非HNSW检索方式使用以下参数集合
-    search_params = {"metric_type": "L2", "params": {"nprobe": 100}}
+    # print(collection.description)
+    # from pymilvus import utility
+    # print(Collection("title").num_entities)
+    # input()
     # 以下查询参数均为HNSW准备，ef取值为top k-3w多
     search_params_HNSW = {"metric_type":"L2","params":{"ef": 128}}
     results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params_HNSW, limit=limit,
                                     expr=None)
-
-    for hits in results:
-        for hit in hits:
-            ids.append(hit.entity.get('patent_id'))
-            primary_id.append(hit.entity.get('signory_id'))
-    # 优化向量查询
-    res2 = collection.query(expr="signory_id in " + str(primary_id) + "", onsistency_level="Strong",
-                           output_fields=["signory"])
-    embed = list(map(lambda x:x["signory"],res2))
-    connections.disconnect("default")
-    return ids,embed,primary_id
+    if out_type == "sig":
+        for hits in results:
+            for hit in hits:
+                ids.append(hit.entity.get('patent_id'))
+                primary_id.append(hit.entity.get('signory_id'))
+        # 优化向量查询
+        res2 = collection.query(expr="signory_id in " + str(primary_id) + "", onsistency_level="Strong",
+                               output_fields=["signory"])
+        embed = list(map(lambda x:x["signory"],res2))
+        connections.disconnect("default")
+        return ids,embed,primary_id
+    elif out_type == "title":
+        for hits in results:
+            for hit in hits:
+                ids.append(hit.entity.get('id'))
+        res2 = collection.query(expr="id in " + str(ids) + "", onsistency_level="Strong",
+                                output_fields=["title"])
+        embed = list(map(lambda x: x["title"], res2))
+        connections.disconnect("default")
+        return ids, embed
