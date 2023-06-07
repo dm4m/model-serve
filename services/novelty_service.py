@@ -3,7 +3,7 @@ import re
 from novelty.compare import novelty_compare
 from repository.milvus_source import get_relevant_id_list
 from repository.mysql_source import get_sig_by_id
-from search_service import get_compare_sig_by_patents
+from services.search_service import get_compare_sig_by_patents
 
 def get_signory_list_by_pdf_file(pdf_file):
     signory_text = signory_extract(pdf_file)
@@ -52,7 +52,7 @@ def signory_analysis(signory_items):
 
 def signory_item_analysis(signory_item, patent_ids):
     # 1.recall relevant signory items 2. extract and compare
-    relevant_signorys = get_compare_sig_by_patents(signory_item, patent_ids);
+    # relevant_signorys = get_compare_sig_by_patents(signory_item, patent_ids);
     relevant_signory_ids, distances = get_relevant_id_list("signory", "signory", signory_item, limit=5)
     relevant_signorys = get_sig_by_id(relevant_signory_ids)
     ans_result = []

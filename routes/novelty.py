@@ -26,10 +26,14 @@ def pantent_extract():
 
 @novelty_bp.route('/noveltyAnalysis', methods=['GET', 'POST', 'OPTIONS'])
 def signory_analysis():
-    args = request.args
-    signory = args.get('signory')
-    response = signory_item_analysis(signory)
-    return jsonify(response)
+    if request.method == 'POST':
+        data = request.json
+        signory = data.get('signory')
+        patentIds = data.get('patentIds')
+        response = signory_item_analysis(signory, patentIds)
+        return jsonify(response)
+    else:
+        return "success"
 
 
 @novelty_bp.route('/noveltyCompare', methods=['GET', 'POST', 'OPTIONS'])
