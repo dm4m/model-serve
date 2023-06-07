@@ -23,7 +23,7 @@ def get_relevant_id_list(collection_name, field, query, limit = 100):
     distances = list(vec_results[0].distances)
     return id_list, distances
 
-def get_relevant_all_field_results(collection_name, field, schema, query_embeddings, limit = 100, output_list = [],out_type="sig"):
+def get_relevant_all_field_results(collection_name, field, schema, query_embeddings, limit = 100, output_list = [],out_type="sig",patent_idlist = None):
     ids= []
     primary_id = []
     embed = []
@@ -36,9 +36,18 @@ def get_relevant_all_field_results(collection_name, field, schema, query_embeddi
     # print(Collection("title").num_entities)
     # input()
     # 以下查询参数均为HNSW准备，ef取值为top k-3w多
-    search_params_HNSW = {"metric_type":"L2","params":{"ef": 128}}
-    results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params_HNSW, limit=limit,
-                                    expr=None)
+    if out_type == "novelty_patent_sig":
+        # 输入patent_id,输出是所有对应patent_id的向量，传入patent_idlist
+        res = collection.query(expr="patent_id in " + str(patent_idlist) + "", onsistency_level="Strong",
+                               output_fields=["signory_id", "patent_id", "signory"])
+        connections.disconnect("default")
+        return res
+
+    search_params_HNSW = {"metric_type": "L2", "params": {"ef": 128}}
+    results = collection.search(query_embeddings, field, output_fields=output_list, param=search_params_HNSW,
+                                limit=limit,
+                                expr=None)
+
     if out_type == "sig":
         for hits in results:
             for hit in hits:
