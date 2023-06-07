@@ -51,7 +51,7 @@ def aggregate(id_score_list):
                 last_embed.append({"embedding":embedding,"doc_id":now_doc_id})
     return last_embed
 
-def rerank(query_vec,last_embed):
+def rerank(query_vec,last_embed, limit = 100):
     # 输入：聚合后查询向量、文档向量
     # 输入：专利id列表,list
     doc_score = {}
@@ -64,4 +64,4 @@ def rerank(query_vec,last_embed):
     # print(type(order[0][1]))
     order_score_list = [float(i[1]) for i in order]
     # print(type(order_score_list[0]))
-    return order_list[0:100], order_score_list[0:100]
+    return order_list[0:limit], order_score_list[0:limit]

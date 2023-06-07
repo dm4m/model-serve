@@ -22,6 +22,8 @@ def neural_search():
 def upload_search():
     if request.method == 'POST':
         files = request.files
+        dic = request.form.to_dict()
+        limit = int(request.form['limit'])
         if len(files) == 0:
             return 'file uploaded false'
         elif len(files) == 1:
@@ -29,7 +31,7 @@ def upload_search():
             pdf_bytes = file.read()
             pdf = pdfplumber.open(io.BytesIO(pdf_bytes))
             signory_list = get_signory_list_by_pdf_file(pdf)
-            res_list = search_by_patent(signory_list)
+            res_list = search_by_patent(signory_list, limit)
             response = {}
             response['signory_list'] = signory_list
             response['res_list'] = res_list

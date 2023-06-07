@@ -6,7 +6,7 @@ import numpy as np
 from repository.milvus_source import get_relevant_id_list, get_relevant_vec_results,get_relevant_all_field_results
 from services.search_classes import aggregate,rerank,encode
 
-def patent_neural_search(field, query,schema=None):
+def patent_neural_search(field, query, limit, schema=None):
     if field == 'title' :
         id_list = get_relevant_id_list("title", "title", query)
         return jsonify(id_list)
@@ -30,7 +30,7 @@ def patent_neural_search(field, query,schema=None):
         # signory = FieldSchema(name="signory", dtype=DataType.FLOAT_VECTOR,dim=768,description="")
         # schema = CollectionSchema(fields=[signory_id, patent_id, signory],auto_id=False,description="signory_seg of patent,HNSW")
         query_embeddings = encode(query)
-        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory", "signory", schema, query_embeddings, limit = 100, output_list = ["signory_id","patent_id"],out_type="sig")
+        id_list,embed_list,sig_id_list = get_relevant_all_field_results("signory", "signory", schema, query_embeddings, limit = limit, output_list = ["signory_id","patent_id"],out_type="sig")
         return_list = []
         return_list.append(id_list)
         return_list.append(embed_list)
@@ -41,7 +41,7 @@ def patent_neural_search(field, query,schema=None):
         title_e_list = []
         query_embeddings = encode(query)
         id_list, title_e_list = get_relevant_all_field_results("title", "title", schema,
-                                                                          query_embeddings, limit=100,
+                                                                          query_embeddings, limit=limit,
                                                                           output_list=["id"],out_type="title")
         return_list = []
         return_list.append(id_list)
@@ -49,8 +49,7 @@ def patent_neural_search(field, query,schema=None):
         return_list.append(id_list)
         return return_list
 
-
-def search_by_patent(signory_list):
+def search_by_patent(signory_list, limit):
     first_signory_weight = 0.6
     other_signory_weight = 0.3
     # schema约束
@@ -64,7 +63,7 @@ def search_by_patent(signory_list):
     all_embed = []
     for i in range(0,len(signory_list)):
         now_embedding = encode(signory_list[i])
-        all_field_list = patent_neural_search("allField", signory_list[i],schema)
+        all_field_list = patent_neural_search("allField", signory_list[i], limit, schema)
         rawrank.append(all_field_list)
         all_embed.append(now_embedding[0])
     # 向量加权操作
@@ -73,7 +72,7 @@ def search_by_patent(signory_list):
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
     # 增加返回值分数，该分数为rrf算法得到的聚合向量的分数，值越大越相似，没有区间限制
-    rerank_list,rerank_score = rerank(last_query_embedding,last_other_embedding)
+    rerank_list,rerank_score = rerank(last_query_embedding,last_other_embedding, limit)
     return rerank_list,rerank_score
 
 def search_by_title_sig(title,signory_list,search_type):
@@ -117,3 +116,8 @@ def search_by_title_sig(title,signory_list,search_type):
     return rerank_list,rerank_score
 
 
+def get_compare_sig_by_patents(signory_item, patent_ids):
+    # signory_item : string
+    # patentids: [int, ...]
+    # return 相关权利要求
+    pass
