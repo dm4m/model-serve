@@ -361,22 +361,23 @@ class pdfcreator:#pdf生成器
     def show_signorys(self,document,patent_info):
 
         title_text = "本申请涉及" + str(patent_info["title"]) + "领域，基本信息如下："
+        title_text = "本申请权利要求信息如下所示："
         aa = document.add_paragraph(title_text)
         aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
         aa.runs[0].font.size = Pt(12)
         aa.runs[0].font.name = '宋体'
         aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
 
-        table = document.add_table(rows=1, cols=1, style='TableGrid')
+        table = document.add_table(rows=0, cols=1, style='TableGrid')
         for row in range(0, 1):
             table.add_row()
         document.styles['Normal'].font.name = u'宋体'
         document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
-        table.cell(0, 0).text = "【标题】" + patent_info["title"]
+        # table.cell(0, 0).text = "【标题】" + patent_info["title"]
         string_sig = "【权利要求】\n"
         string_sig = string_sig + "*" + patent_info["signory_list"][0] + "\n"
         string_sig = string_sig + "\n".join(patent_info["signory_list"][1:])
-        table.cell(1, 0).text = string_sig
+        table.cell(0, 0).text = string_sig
 
         document.add_paragraph(" ")
 
@@ -472,12 +473,12 @@ class pdfcreator:#pdf生成器
             # TODO:总体比对
             test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2",
                        "signory_list":["1. 这是主权项！","2. 从属要求1","3. 从属要求2","4. 从属要求3"]}
-            self.whole_compare(document, test_dic)
+            # self.whole_compare(document, test_dic)
 
 
             for a in self.addsearchresult():
                 self.searchnum+=1
-                aa=document.add_paragraph("2、相关专利基本信息")
+                aa=document.add_paragraph("1、相关专利基本信息")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '宋体'
@@ -507,7 +508,7 @@ class pdfcreator:#pdf生成器
                         cells[0].text= "【摘要】"+c[2]+"\n"
                 document.add_paragraph(" ")
                 if len(self.addpicresult(snum[self.searchnum-1]))!=0:
-                    aa=document.add_paragraph("3、统计分析结果")
+                    aa=document.add_paragraph("2、统计分析结果")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     aa.runs[0].font.size = Pt(12)
                     aa.runs[0].font.name = '宋体'

@@ -120,7 +120,9 @@ def search_by_title_sig(title,signory_list,search_type):
 def get_compare_sig_by_patents(signory_item, patent_ids):
     # signory_item : string
     # patentids: [int, ...]
-    # return 有序对象列表[dict,dict],dict:{"patent_id":int,"signory_id":int,"signory_seg":string,"score":float}
+    # return 列表[signory_id],[distance]
+    # 找截断位置,阈值在这里设置
+    pos = 20
     query_embedding = encode(signory_item)
     signory_id = FieldSchema(name="signory_id", dtype=DataType.INT64, is_primary=True, auto_id=False, description="")
     patent_id = FieldSchema(name="patent_id", dtype=DataType.INT64, description="")
@@ -133,27 +135,19 @@ def get_compare_sig_by_patents(signory_item, patent_ids):
     # res:list dict_keys(['signory_id', 'patent_id', 'signory'])
     res_dic = {}
     for dic in res:
-        score = sum([x*y for x,y in zip(query_embedding[0],dic["signory"])])
-        l1 = np.sqrt(sum([x*x for x in query_embedding[0]]))
-        l2 = np.sqrt(sum([x * x for x in dic["signory"]]))
-        res_dic[dic["signory_id"]] = score/(l1*l2)
-    order = sorted(res_dic.items(), key=lambda d: d[1], reverse=True)
-    # 找截断位置,阈值在这里设置
-    pos = 0
-    for i in order:
-        if i[1] < 0.7:
-            break
-        else:
-            pos += 1
+        distance = sum([(x-y)*(x-y) for x,y in zip(query_embedding[0],dic["signory"])])
+        res_dic[dic["signory_id"]] = np.sqrt(distance)
+    order = sorted(res_dic.items(), key=lambda d: d[1], reverse=False)
+
     order_list_sig = [i[0] for i in order[0:pos]]
-    print(order[0:pos])
+    dis_list = [i[1] for i in order[0:pos]]
     # 获得权利要求文本
-    sig_infos = get_sig_by_id(order_list_sig)
-    new_sig_info = {}
-    for i in sig_infos:
-        new_sig_info[i["signory_id"]] = [i["patent_id"],i["signory_seg"]]
-    sig_text_list = []
-    for i in range(len(order_list_sig)):
-        temp_dic = {"patent_id":new_sig_info[order_list_sig[i]][0],"signory_id":order_list_sig[i],"signory_seg":new_sig_info[order_list_sig[i]][1],"score":order[i][1]}
-        sig_text_list.append(temp_dic)
-    return sig_text_list
+    # sig_infos = get_sig_by_id(order_list_sig)
+    # new_sig_info = {}
+    # for i in sig_infos:
+    #     new_sig_info[i["signory_id"]] = [i["patent_id"],i["signory_seg"]]
+    # sig_text_list = []
+    # for i in range(len(order_list_sig)):
+    #     # temp_dic = {"patent_id":new_sig_info[order_list_sig[i]][0],"signory_id":order_list_sig[i],"signory_seg":new_sig_info[order_list_sig[i]][1],"score":order[i][1]}
+    #     sig_text_list.append(new_sig_info[order_list_sig[i]][1])
+    return order_list_sig,dis_list
