@@ -4,6 +4,7 @@ from pymilvus import CollectionSchema, FieldSchema,DataType
 import torch
 import numpy as np
 from repository.milvus_source import get_relevant_id_list, get_relevant_vec_results,get_relevant_all_field_results
+from repository.mysql_source import get_sig_by_id
 from services.search_classes import aggregate,rerank,encode
 
 def patent_neural_search(field, query, limit, schema=None):
@@ -72,7 +73,7 @@ def search_by_patent(signory_list, limit):
     last_query_embedding = first_signory_weight*torch.tensor(all_embed[0])+other_signory_weight*torch.tensor(temp_sig)
     last_other_embedding = aggregate(rawrank)
     # 增加返回值分数，该分数为rrf算法得到的聚合向量的分数，值越大越相似，没有区间限制
-    rerank_list,rerank_score = rerank(last_query_embedding,last_other_embedding, limit)
+    rerank_list,rerank_score = rerank(last_query_embedding,last_other_embedding,limit =limit)
     return rerank_list,rerank_score
 
 def search_by_title_sig(title,signory_list,search_type):
@@ -119,5 +120,40 @@ def search_by_title_sig(title,signory_list,search_type):
 def get_compare_sig_by_patents(signory_item, patent_ids):
     # signory_item : string
     # patentids: [int, ...]
-    # return 相关权利要求
-    pass
+    # return 有序对象列表[dict,dict],dict:{"patent_id":int,"signory_id":int,"signory_seg":string,"score":float}
+    query_embedding = encode(signory_item)
+    signory_id = FieldSchema(name="signory_id", dtype=DataType.INT64, is_primary=True, auto_id=False, description="")
+    patent_id = FieldSchema(name="patent_id", dtype=DataType.INT64, description="")
+    signory = FieldSchema(name="signory", dtype=DataType.FLOAT_VECTOR, dim=768, description="")
+    schema = CollectionSchema(fields=[signory_id, patent_id, signory], auto_id=False,
+                              description="signory_seg of patent,HNSW")
+    # milvus检索相关权利要求
+    res = get_relevant_all_field_results("signory", "signory", schema, query_embeddings=None, limit=100, output_list=[],
+                                   out_type="novelty_patent_sig", patent_idlist=patent_ids)
+    # res:list dict_keys(['signory_id', 'patent_id', 'signory'])
+    res_dic = {}
+    for dic in res:
+        score = sum([x*y for x,y in zip(query_embedding[0],dic["signory"])])
+        l1 = np.sqrt(sum([x*x for x in query_embedding[0]]))
+        l2 = np.sqrt(sum([x * x for x in dic["signory"]]))
+        res_dic[dic["signory_id"]] = score/(l1*l2)
+    order = sorted(res_dic.items(), key=lambda d: d[1], reverse=True)
+    # 找截断位置,阈值在这里设置
+    pos = 0
+    for i in order:
+        if i[1] < 0.7:
+            break
+        else:
+            pos += 1
+    order_list_sig = [i[0] for i in order[0:pos]]
+    print(order[0:pos])
+    # 获得权利要求文本
+    sig_infos = get_sig_by_id(order_list_sig)
+    new_sig_info = {}
+    for i in sig_infos:
+        new_sig_info[i["signory_id"]] = [i["patent_id"],i["signory_seg"]]
+    sig_text_list = []
+    for i in range(len(order_list_sig)):
+        temp_dic = {"patent_id":new_sig_info[order_list_sig[i]][0],"signory_id":order_list_sig[i],"signory_seg":new_sig_info[order_list_sig[i]][1],"score":order[i][1]}
+        sig_text_list.append(temp_dic)
+    return sig_text_list

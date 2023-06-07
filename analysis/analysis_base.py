@@ -331,7 +331,7 @@ class pdfcreator:#pdf生成器
 
             p = document.add_paragraph()
 
-    def whole_compare(self,document,patent_info,relate_info):
+    def whole_compare(self,document,patent_info):
         # TODO：如果需要加一个总体的，就加这个
         # patent_info:dict,{申请编号,申请人,发明创造名称title}
         # relate_info:list[{标题，申请号，语义相似度}]
@@ -341,7 +341,7 @@ class pdfcreator:#pdf生成器
         aa.runs[0].font.name = '宋体'
         aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
 
-        title_text = "本申请涉及"+str(patent_info["title"])+"领域，基本信息如下："
+        title_text = "本申请涉及"+str(patent_info["title"])+"领域，权利要求信息如下："
         aa = document.add_paragraph(title_text)
         aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
         aa.runs[0].font.size = Pt(12)
@@ -353,38 +353,32 @@ class pdfcreator:#pdf生成器
             table.add_row()
         document.styles['Normal'].font.name = u'宋体'
         document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
-        table.cell(0, 0).text = "申请号或公开号:"+patent_info["publication_code"]
-        table.cell(1, 0).text = "申请人或专利权人："+patent_info["publication_person"]
-        table.cell(2, 0).text = "发明创造名称:"+patent_info["title"]
+        table.cell(0, 0).text = "【申请号或公开号】"+patent_info["publication_code"]
+        table.cell(1, 0).text = "【申请人或专利权人】"+patent_info["publication_person"]
+        table.cell(2, 0).text = "【发明创造名称】"+patent_info["title"]
         document.add_paragraph(" ")
 
-        similiar_text = "通过智能检索，共寻找到相似专利共" + str(len(relate_info)) + "篇，该专利集合均具有比对价值，具体信息如下表所示。"
-        aa = document.add_paragraph(similiar_text)
+    def show_signorys(self,document,patent_info):
+
+        title_text = "本申请涉及" + str(patent_info["title"]) + "领域，基本信息如下："
+        aa = document.add_paragraph(title_text)
         aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
         aa.runs[0].font.size = Pt(12)
         aa.runs[0].font.name = '宋体'
         aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
 
-        table = document.add_table(rows=1, cols=3, style='TableGrid')
-        rows = table.rows[0]
-        for cell in rows.cells:
-            shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
-            cell._tc.get_or_add_tcPr().append(shading_elm)
-        # 修改bug:检索结果表格表头不在第一行
-        table.rows[0].cells[0].text = "标题"
-        table.rows[0].cells[1].text = "申请号"
-        table.rows[0].cells[2].text = "语义相似度"
-        for relate_patent in relate_info:
-            document.styles['Normal'].font.name = u'宋体'
-            document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
-            cells = table.add_row().cells
-            cells[0].text = relate_patent["title"]
-            cells[1].text = relate_patent["patent_code"]
-            cells[2].text = str(relate_patent["similar_score"])
+        table = document.add_table(rows=1, cols=1, style='TableGrid')
+        for row in range(0, 1):
+            table.add_row()
+        document.styles['Normal'].font.name = u'宋体'
+        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+        table.cell(0, 0).text = "【标题】" + patent_info["title"]
+        string_sig = "【权利要求】\n"
+        string_sig = string_sig + "*" + patent_info["signory_list"][0] + "\n"
+        string_sig = string_sig + "\n".join(patent_info["signory_list"][1:])
+        table.cell(1, 0).text = string_sig
+
         document.add_paragraph(" ")
-
-
-
 
     def novelty_string_change(self,novelty_string):
         # novel_paragraph = "采取相关关系词对、新颖性判断规则对待分析权利要求和相关权利要求进行分析后，获得比对结果为：可能破坏带申请专利技术特征的依据点共有{}条。具体分析如下。\n".format(novelty_string.count("将破坏"))
@@ -442,7 +436,7 @@ class pdfcreator:#pdf生成器
         p.runs[0].font.name = '宋体'
         p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
         if(len(self.addsearchresult())!=0):
-            pp=document.add_paragraph(pagenum[a]+"专利检索结果及分析")
+            pp=document.add_paragraph(pagenum[a]+"专利总体比对结果")
             pp.alignment = WD_ALIGN_PARAGRAPH.LEFT
             pp.runs[0].font.size = Pt(12)
             pp.runs[0].font.name = '宋体'
@@ -469,46 +463,51 @@ class pdfcreator:#pdf生成器
             for i in self.data:
                 if i[0]=="检索结果":
                     snum.append(i[1])
-            aa=document.add_paragraph(npagenum[ji]+"专利检索结果及分析")
+            aa=document.add_paragraph(npagenum[ji]+"专利总体比对结果")
             aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
             aa.runs[0].font.size = Pt(14)
             aa.runs[0].font.name = '宋体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
+            # TODO:总体比对
+            test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2",
+                       "signory_list":["1. 这是主权项！","2. 从属要求1","3. 从属要求2","4. 从属要求3"]}
+            self.whole_compare(document, test_dic)
+
+
             for a in self.addsearchresult():
                 self.searchnum+=1
-                aa=document.add_paragraph(str(self.searchnum)+"、检索结果集"+str(self.searchnum)+":")
+                aa=document.add_paragraph("2、相关专利基本信息")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                aa=document.add_paragraph("(1)检索结果内容")
+
+                similiar_text = "        通过智能检索，共寻找到相似专利共10篇，该专利集合均具有比对价值，具体信息如下表所示。"
+                aa = document.add_paragraph(similiar_text)
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(12)
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                table = document.add_table(rows=1, cols=4,style='TableGrid')
-                rows = table.rows[0]
-                for cell in rows.cells:
-                    shading_elm = parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls('w')))
-                    cell._tc.get_or_add_tcPr().append(shading_elm)
-                # 修改bug:检索结果表格表头不在第一行
-                table.rows[0].cells[0].text = "专利号"
-                table.rows[0].cells[1].text = "标题"
-                table.rows[0].cells[2].text = "申请人列表"
-                table.rows[0].cells[3].text = "申请时间"
-                for b in a:
+
+                table = document.add_table(rows=0, cols=1,style='TableGrid')
+                # 修改内容：将标题、公开号、摘要放入检索表格中
+                for b in a[0:10]:
                     for c in b:
                         jiannum+=1
                         document.styles['Normal'].font.name = u'宋体'
                         document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
                         cells = table.add_row().cells
-                        cells[0].text=c[0]
-                        cells[1].text=c[1]
-                        cells[2].text=c[2]
-                        cells[3].text=c[3]
+                        shading_elm = parse_xml(r'<w:shd {} w:fill="EEEEEE"/>'.format(nsdecls('w')))
+                        cells[0]._tc.get_or_add_tcPr().append(shading_elm)
+                        cells[0].text= c[0]
+                        cells = table.add_row().cells
+                        cells[0].text = "【专利公开号】"+c[1]
+                        cells = table.add_row().cells
+                        cells[0].text= "【摘要】"+c[2]+"\n"
                 document.add_paragraph(" ")
                 if len(self.addpicresult(snum[self.searchnum-1]))!=0:
-                    aa=document.add_paragraph("(2)统计分析结果")
+                    aa=document.add_paragraph("3、统计分析结果")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     aa.runs[0].font.size = Pt(12)
                     aa.runs[0].font.name = '宋体'
@@ -574,36 +573,33 @@ class pdfcreator:#pdf生成器
             aa.runs[0].font.name = '宋体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
             for related_dic in self.addnovelresult():
-                # # TODO:需要总体比对加入，不需要就不用加入
-                # test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2"}
-                # test_relate = [{"title":"相关标题1","similar_score":20,"patent_code":"测试专利1的code"},
-                # {"title":"相关标题2","similar_score":18,"patent_code":"测试专利2的code"}]
-                # self.whole_compare(document, test_dic, test_relate)
-                aa=document.add_paragraph(str(numa)+"、新颖性比对结果"+str(numa)+":")
+
+                aa=document.add_paragraph("1、待分析专利具体信息")
                 aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 aa.runs[0].font.size = Pt(13)
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                # 逻辑修改：如果要呈现比对结果和图表分析结果，则加上（1）(2)；如果没有图表，小括号级的标题不加
-                if (len(self.addnewpicresult(nnum[numa - 2])) != 0):
-                    content_title = "(1)新颖性比对结果内容"
-                    aa = document.add_paragraph(content_title)
-                    aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    aa.runs[0].font.size = Pt(12)
-                    aa.runs[0].font.name = '宋体'
-                    aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                # 修改：增加一个权利要求表格
+                self.show_signorys(document,test_dic)
+                # 逻辑修改：待分析专利具体信息、比对结果、图表
+                content_title = "2、新颖性比对结果内容"
+                aa = document.add_paragraph(content_title)
+                aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                aa.runs[0].font.size = Pt(13)
+                aa.runs[0].font.name = '宋体'
+                aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 逻辑：首先获取原权利要求并展示，其次讲相关权利要求信息写入表格并进行展示
                 p = document.add_paragraph()
-                p.style.font.name = '宋体'
-                p.bold = True
-                p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-                p.add_run("原权利要求：\n")
-                p.add_run(related_dic["origin_sig_text"] + "\n")
-                p = document.add_paragraph()
+                # p.style.font.name = '宋体'
+                # p.bold = True
+                # p.style.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+                # p.add_run("原权利要求：\n")
+                # p.add_run(related_dic["origin_sig_text"] + "\n")
+                # p = document.add_paragraph()
                 p.add_run("根据原权利要求进行检索、比对后，得到相关权利要求如下：")
                 self.novelty_table_design(document, related_dic)
                 if(len(self.addnewpicresult(nnum[numa-2]))!=0):
-                    aa = document.add_paragraph("(2)新颖性分析结果统计")
+                    aa = document.add_paragraph("(3)新颖性分析结果统计")
                     aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     aa.runs[0].font.size = Pt(12)
                     aa.runs[0].font.name = '宋体'
@@ -714,7 +710,9 @@ class pdfcreator:#pdf生成器
                     mydata.append(a[0])
                 for a in mydata:
                     uppdata=[]
-                    self.db.myexecu("SELECT patent_code, title, inventor_list, application_date FROM patent.patent where id ="+str(a))
+                    # self.db.myexecu("SELECT title,inventor_list,application_date FROM patent.patent where id ="+str(a))
+                    self.db.myexecu("SELECT title,patent_code,abstract FROM patent.patent where id =" + str(a))
+
                     for b in self.db.data:
                         uppdata.append(b)
                     updata.append(uppdata)
@@ -800,9 +798,9 @@ class pdfcreator:#pdf生成器
         outresult=[]
         tabledata=[]
         self.db.myexecu("SELECT id FROM patent.novelty_stats_result where novelty_ana_result_id="+str(id))
-        # 针对同一新颖性分析结果集的多次统计结果相同，因此如果表中有多个也只读一个
-        novelty_stats_id = self.db.data[0][0]
-        self.db.myexecu("SELECT option_json FROM patent.novelty_stats_item where novelty_stats_id="+ str(novelty_stats_id))
+        mystr=str(self.db.data)
+        mystr=mystr[2:-3]
+        self.db.myexecu("SELECT option_json FROM patent.novelty_stats_item where novelty_stats_id="+mystr)
         for i in self.db.data:
             myjson=json.loads(str(i[0]))
             mytitle=myjson["title"][0]["text"]
