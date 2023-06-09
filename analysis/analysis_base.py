@@ -296,7 +296,6 @@ class pdfcreator:#pdf生成器
 
             # 0行和1行
             table.cell(0, 1).text = "相关性"
-            # TODO: 相似度得分需要从related_dic或者哪里拿一下
             table.cell(1, 1).text = related_dic["related"][relate_sig_id]["score"]
             table.cell(0, 0).merge(table.cell(1, 0))
             table.cell(0, 0).text = "相关权利要求" + str(relate_sig_id + 1)
@@ -332,7 +331,6 @@ class pdfcreator:#pdf生成器
             p = document.add_paragraph()
 
     def whole_compare(self,document,patent_info):
-        # TODO：如果需要加一个总体的，就加这个
         # patent_info:dict,{申请编号,申请人,发明创造名称title}
         # relate_info:list[{标题，申请号，语义相似度}]
         aa = document.add_paragraph("1、总体比对结果")
@@ -358,26 +356,28 @@ class pdfcreator:#pdf生成器
         table.cell(2, 0).text = "【发明创造名称】"+patent_info["title"]
         document.add_paragraph(" ")
 
-    def show_signorys(self,document,patent_info):
+    def show_signorys(self,document):
+        res = self.addsigitemresult()
+        print(res)
+        if res != []:
+            title_text = "本申请权利要求信息如下所示："
+            aa = document.add_paragraph(title_text)
+            aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            aa.runs[0].font.size = Pt(12)
+            aa.runs[0].font.name = '宋体'
+            aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
 
-        title_text = "本申请涉及" + str(patent_info["title"]) + "领域，基本信息如下："
-        title_text = "本申请权利要求信息如下所示："
-        aa = document.add_paragraph(title_text)
-        aa.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        aa.runs[0].font.size = Pt(12)
-        aa.runs[0].font.name = '宋体'
-        aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-
-        table = document.add_table(rows=0, cols=1, style='TableGrid')
-        for row in range(0, 1):
-            table.add_row()
-        document.styles['Normal'].font.name = u'宋体'
-        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
-        # table.cell(0, 0).text = "【标题】" + patent_info["title"]
-        string_sig = "【权利要求】\n"
-        string_sig = string_sig + "*" + patent_info["signory_list"][0] + "\n"
-        string_sig = string_sig + "\n".join(patent_info["signory_list"][1:])
-        table.cell(0, 0).text = string_sig
+            table = document.add_table(rows=0, cols=1, style='TableGrid')
+            for row in range(0, 1):
+                table.add_row()
+            document.styles['Normal'].font.name = u'宋体'
+            document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+            # table.cell(0, 0).text = "【标题】" + patent_info["title"]
+            string_sig = "【权利要求】\n"
+            string_sig = string_sig + "*1. " + res[0] + "\n"
+            for i in range(1,len(res)):
+                string_sig = string_sig + str(i+1) + ". " + res[i] + "\n"
+            table.cell(0, 0).text = string_sig
 
         document.add_paragraph(" ")
 
@@ -391,6 +391,7 @@ class pdfcreator:#pdf生成器
 
 
     def finalword(self):#生成最终的word
+
         jiannum=0
         snum=[]
         nnum=[]
@@ -436,6 +437,7 @@ class pdfcreator:#pdf生成器
         p.runs[0].font.size = Pt(16)
         p.runs[0].font.name = '宋体'
         p.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
         if(len(self.addsearchresult())!=0):
             pp=document.add_paragraph(pagenum[a]+"专利总体比对结果")
             pp.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -470,10 +472,10 @@ class pdfcreator:#pdf生成器
             aa.runs[0].font.name = '宋体'
             aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
 
-            # TODO:总体比对
-            test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2",
-                       "signory_list":["1. 这是主权项！","2. 从属要求1","3. 从属要求2","4. 从属要求3"]}
-            # self.whole_compare(document, test_dic)
+            # # TODO:总体比对
+            # test_dic ={"title":"测试标题","publication_code":"测试编码","publication_person":"测试申请人1，测试申请人2",
+            #            "signory_list":["1. 这是主权项！","2. 从属要求1","3. 从属要求2","4. 从属要求3"]}
+            # # self.whole_compare(document, test_dic)
 
 
             for a in self.addsearchresult():
@@ -581,7 +583,7 @@ class pdfcreator:#pdf生成器
                 aa.runs[0].font.name = '宋体'
                 aa.runs[0].element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
                 # 修改：增加一个权利要求表格
-                self.show_signorys(document,test_dic)
+                self.show_signorys(document)
                 # 逻辑修改：待分析专利具体信息、比对结果、图表
                 content_title = "2、新颖性比对结果内容"
                 aa = document.add_paragraph(content_title)
@@ -738,6 +740,20 @@ class pdfcreator:#pdf生成器
                     temp_dic = {"signory_text": a[0], "patent_title": a[2], "suggestion": a[1], "score": a[3], "patent_code": a[4]}
                     signories["related"].append(temp_dic)
                 mydata.append(signories)
+        return mydata
+
+    def addsigitemresult(self):
+        mydata = []
+        for i in self.data:
+            if i[0] == "专利信息":
+                self.db.myexecu("SELECT report_patent_id FROM patent.report_patent where report_patent_id=" + str(i[1]))
+                report_patent_id = str(self.db.data[0][0])
+                self.db.myexecu(
+                    "SELECT signory_text FROM patent.report_signory where report_patent_id=" + str(
+                        report_patent_id))
+                # 这里获取了新颖性的主权项并存放成词典
+                for signory in self.db.data:
+                    mydata.append(signory[0])
         return mydata
 
     def addpicresult(self,id):#图片内容
