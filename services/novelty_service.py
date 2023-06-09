@@ -52,8 +52,7 @@ def signory_analysis(signory_items):
 
 def signory_item_analysis(signory_item, patent_ids):
     # 1.recall relevant signory items 2. extract and compare
-    # relevant_signorys = get_compare_sig_by_patents(signory_item, patent_ids);
-    relevant_signory_ids, distances = get_relevant_id_list("signory", "signory", signory_item, limit=5)
+    relevant_signory_ids, distances = get_compare_sig_by_patents(signory_item, patent_ids);
     relevant_signorys = get_sig_by_id(relevant_signory_ids)
     ans_result = []
     for index, sig in enumerate(relevant_signorys) :
