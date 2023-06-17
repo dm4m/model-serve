@@ -7,7 +7,7 @@ from repository.milvus_source import get_relevant_id_list, get_relevant_vec_resu
 from repository.mysql_source import get_sig_by_id
 from services.search_classes import aggregate,rerank,encode
 
-def patent_neural_search(field, query, limit, schema=None):
+def patent_neural_search(field, query, limit = 100, schema=None):
     if field == 'title' :
         id_list = get_relevant_id_list("title", "title", query)
         return jsonify(id_list)
@@ -122,7 +122,7 @@ def get_compare_sig_by_patents(signory_item, patent_ids):
     # patentids: [int, ...]
     # return 列表[signory_id],[distance]
     # 找截断位置,阈值在这里设置
-    pos = 20
+    pos = 10
     query_embedding = encode(signory_item)
     signory_id = FieldSchema(name="signory_id", dtype=DataType.INT64, is_primary=True, auto_id=False, description="")
     patent_id = FieldSchema(name="patent_id", dtype=DataType.INT64, description="")
@@ -130,7 +130,7 @@ def get_compare_sig_by_patents(signory_item, patent_ids):
     schema = CollectionSchema(fields=[signory_id, patent_id, signory], auto_id=False,
                               description="signory_seg of patent,HNSW")
     # milvus检索相关权利要求
-    res = get_relevant_all_field_results("signory", "signory", schema, query_embeddings=None, limit=100, output_list=[],
+    res = get_relevant_all_field_results("signory", "signory", schema, query_embeddings=None, limit=10, output_list=[],
                                    out_type="novelty_patent_sig", patent_idlist=patent_ids)
     # res:list dict_keys(['signory_id', 'patent_id', 'signory'])
     res_dic = {}
